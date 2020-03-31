@@ -45,7 +45,7 @@ class ModelStats:
     self.test_samples_seen += cnt
 
   def get_validation_loss(self):
-    return self.curr_test_acc/self.test_samples_seen
+    return self.curr_test_loss/self.test_samples_seen
 
   def next_epoch(self, lr):
     self.epochs += 1
