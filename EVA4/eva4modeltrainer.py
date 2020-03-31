@@ -88,7 +88,7 @@ class Test:
             self.stats.add_batch_test_stats(self.loss, correct, len(data))
         
         if self.scheduler and isinstance(self.scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-              #print("hello yes i am ")
+              print("In scheduler step with loss of ", self.stats.get_validation_loss())
               self.scheduler.step(self.stats.get_validation_loss())
 
 class Misclass:
