@@ -44,6 +44,9 @@ class ModelStats:
     self.curr_test_acc += acc
     self.test_samples_seen += cnt
 
+  def get_validation_loss(self):
+    return self.curr_test_acc/self.test_samples_seen
+
   def next_epoch(self, lr):
     self.epochs += 1
     #print(self.curr_test_loss, self.test_samples_seen, self.curr_train_loss, self.train_samples_seen)

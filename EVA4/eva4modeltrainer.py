@@ -89,7 +89,7 @@ class Test:
         
         if self.scheduler and isinstance(self.scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
               #print("hello yes i am ")
-              self.scheduler.step(self.loss)
+              self.scheduler.step(self.stats.get_validation_loss())
 
 class Misclass:
   def __init__(self, model, dataloader, stats):
