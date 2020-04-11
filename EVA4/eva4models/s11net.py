@@ -49,8 +49,6 @@ class S11Net(Net):
     self.layer2 = S11Block(128, 256, False)
     self.layer3 = S11Block(256, 512)
 
-    #ending layer or layer-4
-    self.maxpool=nn.MaxPool2d(4,1)
     self.fc = self.create_conv2d(512, 10, kernel_size=(1,1), padding=0, bn=False, relu=False)
 
 
@@ -59,7 +57,7 @@ class S11Net(Net):
     x = self.layer1(x)
     x = self.layer2(x)
     x = self.layer3(x)
-    x=self.maxpool(x)
-    x=self.fc(x)
-    x=x.view(-1,10)
+    x = F.max_pool2d(x, 4)
+    x = self.fc(x)
+    x = x.view(-1,10)
     return F.log_softmax(x,dim=-1)
