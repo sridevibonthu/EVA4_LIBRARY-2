@@ -69,6 +69,7 @@ class S11Net(Net):
 
 
 from eva4modeltrainer import ModelTrainer
+from torchsummary import summary
 
 class Net2(nn.Module):
     """
