@@ -28,13 +28,12 @@ class S11Block(nn.Module):
         super(S11Block, self).__init__()
         self.parallel = parallel
         self.conv = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1, stride=1, bias=False)
-        self.maxpool = nn.MaxPool2d(2)
         self.bn = nn.BatchNorm2d(planes)
         if parallel:
             self.res = ResBlock(planes)
 
     def forward(self, x):
-        out = F.relu(self.bn(self.maxpool(self.conv(x))))
+        out = F.relu(self.bn(F.max_pool2d(self.conv(x), 2)))
         if self.parallel:
             out = self.res(out)
         return out
