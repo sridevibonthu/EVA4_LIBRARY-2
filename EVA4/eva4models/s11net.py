@@ -66,3 +66,51 @@ class S11Net(Net):
     x = self.fc(x)
     x = x.view(-1,10)
     return F.log_softmax(x,dim=-1)
+
+
+
+
+#implementation of the new resnet model
+class newResnetS11(Net):
+  def __init__(self,name="Model",dropout_value=0):
+    super(newResnetS11,self).__init__(name)
+    self.prepLayer=self.create_conv2d(3, 64, dropout=dropout_value)
+    #layer1
+    self.layer1Conv1=self.create_conv2d(64,128, dropout=dropout_value,max_pooling=1)
+    self.layer1resnetBlock1=self.resnetBlock(128,128)
+    #layer2
+    self.layer2Conv1=self.create_conv2d(128,256, dropout=dropout_value,max_pooling=1)
+    #layer3
+    self.layer3Conv1=self.create_conv2d(256,512, dropout=dropout_value,max_pooling=1)
+    self.layer3resnetBlock1=self.resnetBlock(512,512)
+    #ending layer or layer-4
+    self.maxpool=nn.MaxPool2d(4)
+    self.fc_layer=self.create_conv2d(512, 10, kernel_size=(1,1), padding=0, bn=False, relu=False)
+  def resnetBlock(self,in_channels, out_channels):
+      l=[]
+      l.append(nn.Conv2d(in_channels,out_channels,(3,3),padding=1,bias=False))
+      l.append(nn.BatchNorm2d(out_channels))
+      l.append(nn.ReLU())
+      l.append(nn.Conv2d(in_channels,out_channels,(3,3),padding=1,bias=False))
+      l.append(nn.BatchNorm2d(out_channels))
+      l.append(nn.ReLU())
+      return nn.Sequential(*l)
+
+  def forward(self,x):
+    #prepLayer
+    x=self.prepLayer(x)
+    #Layer1
+    x=self.layer1Conv1(x)
+    r1=self.layer1resnetBlock1(x)
+    x=torch.add(x,r1)
+    #layer2
+    x=self.layer2Conv1(x)
+    #layer3
+    x=self.layer3Conv1(x)
+    r2=self.layer3resnetBlock1(x)
+    x=torch.add(x,r2)
+    #layer4 or ending layer
+    x=self.maxpool(x)
+    x=self.fc_layer(x)
+    x=x.view(-1,10)
+    return F.log_softmax(x,dim=-1)
