@@ -101,7 +101,7 @@ class Net2(nn.Module):
                  out_channels, bn, dropout, relu)
 
     def __init__(self, name="Model"):
-        super(Net, self).__init__()
+        super(Net2, self).__init__()
         self.trainer = None
         self.name = name
 
