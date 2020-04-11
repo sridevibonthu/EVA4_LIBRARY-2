@@ -20,7 +20,7 @@ class ResBlock(nn.Module):
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
         out = F.relu(self.bn2(self.conv2(out)))
-        out += x
+        out = torch.add(x, out)
         return out
 
 class S11Block(nn.Module):
