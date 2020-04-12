@@ -50,7 +50,7 @@ class LRRangeFinder():
 
         # Update LR
         scheduler.step()
-        lr_step = optimizer.state_dict()["param_groups"][0]["lr"]
+        lr_step = self.optimizer.state_dict()["param_groups"][0]["lr"]
         self.lr.append(lr_step)
 
         # smooth the loss
