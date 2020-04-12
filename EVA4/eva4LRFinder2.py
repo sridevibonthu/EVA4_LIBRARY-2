@@ -38,7 +38,7 @@ class LRRangeFinder():
         
         # Training mode and zero gradients
         self.model.train()
-        optimizer.zero_grad()
+        self.optimizer.zero_grad()
         
         # Get outputs to calc loss
         outputs = self.model(inputs)
@@ -46,7 +46,7 @@ class LRRangeFinder():
 
         # Backward pass
         loss.backward()
-        optimizer.step()
+        self.optimizer.step()
 
         # Update LR
         scheduler.step()
