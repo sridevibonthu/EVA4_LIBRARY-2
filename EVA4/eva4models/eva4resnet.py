@@ -75,7 +75,7 @@ class ResNet(Net):
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
 
         #self.gap = nn.AvgPool2d(kernel_size=(4,4)) 
-        self.conv10 = self.create_conv2d(512, 10, kernel_size=(1,1), padding=0, bn=False, relu=False) # IN: 512 OUT:10
+        self.conv10 = self.create_conv2d(512, num_classes, kernel_size=(1,1), padding=0, bn=False, relu=False) # IN: 512 OUT:10
         #self.linear = nn.Linear(512*block.expansion, num_classes)
 
     def _make_layer(self, block, planes, num_blocks, stride):
@@ -92,7 +92,7 @@ class ResNet(Net):
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
-        out = F.avg_pool2d(out, 4)
+        out = F.avg_pool2d(out, out.size(-1))
         #out = out.view(out.size(0), -1)
         #out = self.linear(out)
         #out = self.gap(out)
@@ -102,17 +102,17 @@ class ResNet(Net):
         return F.log_softmax(out, dim=-1)
 
 
-def ResNet18(name="Resnet18"):
-    return ResNet(BasicBlock, [2,2,2,2], name=name)
+def ResNet18(name="Resnet18", num_classes=10):
+    return ResNet(BasicBlock, [2,2,2,2], num_classes=num_classes, name=name)
 
-def ResNet34(name="Resnet34"):
-    return ResNet(BasicBlock, [3,4,6,3], name=name)
+def ResNet34(name="Resnet34", num_classes=10):
+    return ResNet(BasicBlock, [3,4,6,3], num_classes=num_classes, name=name)
 
-def ResNet50(name="Resnet50"):
-    return ResNet(Bottleneck, [3,4,6,3], name=name)
+def ResNet50(name="Resnet50", num_classes=10):
+    return ResNet(Bottleneck, [3,4,6,3], num_classes=num_classes, name=name)
 
-def ResNet101(name="Resnet101"):
-    return ResNet(Bottleneck, [3,4,23,3], name=name)
+def ResNet101(name="Resnet101", num_classes=10):
+    return ResNet(Bottleneck, [3,4,23,3], num_classes=num_classes, name=name)
 
 def ResNet152():
     return ResNet(Bottleneck, [3,8,36,3])
