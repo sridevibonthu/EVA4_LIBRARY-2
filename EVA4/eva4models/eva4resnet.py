@@ -66,7 +66,7 @@ class ResNet(Net):
     def __init__(self, block, num_blocks, num_classes=10, name="Resnet", droupout=0):
         super(ResNet, self).__init__(name)
         self.in_planes = 64
-
+        self.num_classes = num_classes
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
@@ -98,7 +98,7 @@ class ResNet(Net):
         #out = self.gap(out)
         out = self.conv10(out)
 
-        out = out.view(-1, 10)
+        out = out.view(-1, self.num_classes)
         return F.log_softmax(out, dim=-1)
 
 
