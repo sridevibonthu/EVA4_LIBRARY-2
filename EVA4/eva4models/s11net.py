@@ -8,14 +8,12 @@ class ResBlock(nn.Module):
         super(ResBlock, self).__init__()
         self.conv1 = nn.Conv2d(planes, planes, kernel_size=3, padding=1, stride=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
-        self.relu1 = nn.ReLU()
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=1, stride=1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes)
-        self.relu2 = nn.ReLU()
 
     def forward(self, x):
-        out = self.relu1(self.bn1(self.conv1(x)))
-        out = self.relu1(self.bn2(self.conv2(out)))
+        out = F.ReLU(self.bn1(self.conv1(x)))
+        out = F.ReLU(self.bn2(self.conv2(out)))
         out = torch.add(x, out)
         return out
 
@@ -24,30 +22,27 @@ class S11Block(nn.Module):
         super(S11Block, self).__init__()
         self.parallel = parallel
         self.conv = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1, stride=1, bias=False)
-        self.maxpool = nn.MaxPool2d(2)
         self.bn = nn.BatchNorm2d(planes)
-        self.relu = nn.ReLU()
         if parallel:
             self.res = ResBlock(planes)
 
     def forward(self, x):
-        out = self.relu(self.bn(self.maxpool(self.conv(x))))
+        out = F.ReLU(self.bn(F.max_pool2d(self.conv(x), 2)))
         if self.parallel:
             out = self.res(out)
         return out
 
 #implementation of the new resnet model
 class S11Net(Net):
-  def __init__(self,name="S11Net", dropout_value=0):
+  def __init__(self,name="S11Net", dropout_value=0, num_classes=10):
     super(S11Net,self).__init__(name)
     self.prepLayer=self.create_conv2d(3, 64, dropout=dropout_value)
-
+    self.num_classes = num_classes
     self.layer1 = S11Block(64, 128)
     self.layer2 = S11Block(128, 256, False)
     self.layer3 = S11Block(256, 512)
 
     #ending layer or layer-4
-    self.maxpool = nn.MaxPool2d(4)
     self.fc = self.create_conv2d(512, 10, kernel_size=(1,1), padding=0, bn=False, relu=False)
 
 
@@ -56,7 +51,7 @@ class S11Net(Net):
     x = self.layer1(x)
     x = self.layer2(x)
     x = self.layer3(x)
-    x = self.maxpool(x)
+    x = F.max_pool2d(x, x.size(-1))
     x = self.fc(x)
-    x = x.view(-1,10)
+    x = x.view(-1,self.num_classes)
     return F.log_softmax(x,dim=-1)
