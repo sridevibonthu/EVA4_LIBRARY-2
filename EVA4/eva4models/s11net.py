@@ -12,8 +12,8 @@ class ResBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(planes)
 
     def forward(self, x):
-        out = F.ReLU(self.bn1(self.conv1(x)))
-        out = F.ReLU(self.bn2(self.conv2(out)))
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = F.relu(self.bn2(self.conv2(out)))
         out = torch.add(x, out)
         return out
 
@@ -27,7 +27,7 @@ class S11Block(nn.Module):
             self.res = ResBlock(planes)
 
     def forward(self, x):
-        out = F.ReLU(self.bn(F.max_pool2d(self.conv(x), 2)))
+        out = F.relu(self.bn(F.max_pool2d(self.conv(x), 2)))
         if self.parallel:
             out = self.res(out)
         return out
