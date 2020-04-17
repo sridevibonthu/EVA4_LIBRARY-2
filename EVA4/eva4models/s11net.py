@@ -43,7 +43,7 @@ class S11Net(Net):
     self.layer3 = S11Block(256, 512)
 
     #ending layer or layer-4
-    self.fc = self.create_conv2d(512, 10, kernel_size=(1,1), padding=0, bn=False, relu=False)
+    self.fc = self.create_conv2d(512, num_classes, kernel_size=(1,1), padding=0, bn=False, relu=False)
 
 
   def forward(self,x):
