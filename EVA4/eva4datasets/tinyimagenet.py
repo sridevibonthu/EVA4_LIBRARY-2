@@ -15,8 +15,8 @@ def alldata(path):
 
     # train data
     for value, key in enumerate(class_ids):
-    images += [f'{path}train/{key}/images/{key}_{i}.JPEG' for i in range(500)]
-    labels += [value for i in range(500)]
+        images += [f'{path}train/{key}/images/{key}_{i}.JPEG' for i in range(500)]
+        labels += [value for i in range(500)]
 
     # validation data
     for line in open( path + 'val/val_annotations.txt'):
