@@ -26,9 +26,8 @@ def alldata(path):
 
     dataset = list(zip(images, labels))
     random.shuffle(dataset)
-    trainlen = int(len(dataset)*0.7)
 
-    return dataset
+    return dataset, class_names
 
 class TinyImagenetDataset(Dataset):
     """Tine Imagenet dataset reader."""
