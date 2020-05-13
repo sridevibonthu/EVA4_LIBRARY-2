@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from eva4modeltrainer import ModelTrainer
+from eva4tensorboardtrainer import ModelTrainer as TBModelTrainer
 
 class Net(nn.Module):
     """
@@ -42,6 +43,10 @@ class Net(nn.Module):
 
     def gotrain(self, optimizer, train_loader, test_loader, epochs, statspath, scheduler=None, batch_scheduler=False, L1lambda=0):
       self.trainer = ModelTrainer(self, optimizer, train_loader, test_loader, statspath, scheduler, batch_scheduler, L1lambda)
+      self.trainer.run(epochs)
+
+    def trainTensorboard(self, optimizer, train_loader, test_loader, epochs, runmanager, scheduler=None, batch_scheduler=False, L1lambda=0):
+      self.trainer = TBModelTrainer(self, optimizer, train_loader, test_loader, runmanager, scheduler, batch_scheduler, L1lambda)
       self.trainer.run(epochs)
 
     def stats(self):
