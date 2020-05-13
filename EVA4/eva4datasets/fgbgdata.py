@@ -28,6 +28,11 @@ def fgbg_test_train(folder, train=0.8, limit=1):
     depths = sorted(filter(lambda x: re.match(r'^fgbg[\d]{6}\.jpg$', x), os.listdir(depths_path)))
     masks = sorted(filter(lambda x: re.match(r'^mask[\d]{6}\.jpg$', x), os.listdir(masks_path)))
 
+    images = list(map(lambda x: os.path.join(images_path, x), images))
+    depths = list(map(lambda x: os.path.join(depths_path, x), depths))
+    masks = list(map(lambda x: os.path.join(masks_path, x), masks))
+
+
     if(len(images) != len(depths) != len(masks)):
         raise ValueError("image counts do not match in images, depth and masks")
 
