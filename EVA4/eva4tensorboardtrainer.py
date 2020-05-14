@@ -70,7 +70,6 @@ class Test:
     self.runmanager = runmanager
     self.scheduler = scheduler
     self.lossfn = lossfn
-    self.loss=0.0
     print("initialized tester with ", self.model.device)
 
   def run(self):
@@ -79,7 +78,7 @@ class Test:
         for data, target in self.dataloader:
             data, target = data.to(self.model.device), target.to(self.model.device)
             output = self.model(data)
-            self.loss = self.lossfn(output, target)
+            loss = self.lossfn(output, target)
             self.runmanager.track_test_loss(loss)
             self.runmanager.track_test_num_correct(output, target)
         
