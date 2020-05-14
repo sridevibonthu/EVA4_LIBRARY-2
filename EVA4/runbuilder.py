@@ -143,7 +143,7 @@ class RunManager():
     self.tb.add_scalar('Learning Rate', lr, self.epoch_count)
 
     # output sample images created in test
-    self.sample_outcomes(self.test_outputs)
+    self.sample_outcomes(self.test_output)
 
     results = OrderedDict()
     results["run"] = self.run_count

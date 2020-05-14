@@ -5,6 +5,7 @@ import numpy as np
 from torch.utils.data import Dataset
 import random
 import re
+from skimage.transform import rescale, resize, downscale_local_mean
 
 
 def validatePath(path):
@@ -46,16 +47,19 @@ def fgbg_test_train(folder, train=0.8, limit=1):
     ts = int(l * train)
     return dataset[:ts], dataset[ts:l]
 
+def scale_image(image, scale):
+    return resize(image, (image.shape[0] // scale, image.shape[1] // scale), anti_aliasing=True)
 
 class FGBGDataset(Dataset):
     """Tine Imagenet dataset reader."""
 
-    def __init__(self, data, transform=None):
+    def __init__(self, data, scale=1, transform=None):
         """
         Args:
             data (string): zipped images and labels.
         """
         self.transform = transform
+        self.scale = scale
         self.images, self.masks, self.depths = zip(*data)
 
     def __len__(self):
@@ -65,9 +69,9 @@ class FGBGDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        image = io.imread(self.images[idx], as_gray=False, pilmode="RGB")
-        mask = io.imread(self.masks[idx], as_gray=True, pilmode="1")
-        depth = io.imread(self.depths[idx], as_gray=True, pilmode="L")
+        image = scale_image(io.imread(self.images[idx], as_gray=False, pilmode="RGB"), self.scale)
+        mask = scale_image(io.imread(self.masks[idx], as_gray=True, pilmode="1"), self.scale)
+        depth = scale_image(io.imread(self.depths[idx], as_gray=True, pilmode="L"), self.scale)
 
         if self.transform:
             image = self.transform(image)
