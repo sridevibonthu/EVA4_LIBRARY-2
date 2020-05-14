@@ -5,7 +5,7 @@ import numpy as np
 from torch.utils.data import Dataset
 import random
 import re
-from skimage.transform import rescale, resize, downscale_local_mean
+from skimage.transform import resize
 
 
 def validatePath(path):
@@ -48,6 +48,9 @@ def fgbg_test_train(folder, train=0.8, limit=1):
     return dataset[:ts], dataset[ts:l]
 
 def scale_image(image, scale):
+    if scale==1:
+        return image
+        
     return resize(image, (image.shape[0] // scale, image.shape[1] // scale), anti_aliasing=True)
 
 class FGBGDataset(Dataset):
