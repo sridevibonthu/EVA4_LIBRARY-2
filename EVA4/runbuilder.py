@@ -65,13 +65,13 @@ class RunManager():
     self.channel_means = channel_means
     self.channel_stdevs = channel_stdevs
 
-  def sample_outcomes(self, outcomes):
+  def sample_outcomes(self, outcomes, suffix='input'):
     if not self.classification:
         l = 0
         for k, v in self.visdecoder.items():
             vgrid = torchvision.utils.make_grid(outcomes[:32,l:v,:,:])
             l = v
-            self.tb.add_image(k, vgrid)
+            self.tb.add_image(f'{k}({suffix})', vgrid)
 
   # record the count, hyper-param, model, trainloader of each run
   # record sample images and network graph to TensorBoard  
@@ -143,7 +143,7 @@ class RunManager():
     self.tb.add_scalar('Learning Rate', lr, self.epoch_count)
 
     # output sample images created in test
-    self.sample_outcomes(self.test_output)
+    self.sample_outcomes(self.test_output, f'output-{self.epoch_count}')
 
     results = OrderedDict()
     results["run"] = self.run_count
