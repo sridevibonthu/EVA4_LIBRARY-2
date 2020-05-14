@@ -17,7 +17,7 @@ class ResBlock(nn.Module):
         out = F.relu(self.bn1(self.conv1(x)))
         out = F.relu(self.bn2(self.conv2(out)))
         out = F.relu(self.bn3(self.conv3(out)))
-        x += out
+        x = x + out
         return x
 
 class InitialBlock(nn.Module):
