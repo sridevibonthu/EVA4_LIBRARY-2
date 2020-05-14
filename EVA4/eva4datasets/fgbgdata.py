@@ -51,7 +51,7 @@ def scale_image(image, scale):
     if scale==1:
         return image
 
-    return resize(image, (image.shape[0] // scale, image.shape[1] // scale), anti_aliasing=True)
+    return resize(image, (int(image.shape[0]/scale), int(image.shape[1]/scale)), anti_aliasing=True)
 
 class FGBGDataset(Dataset):
     """Tine Imagenet dataset reader."""
