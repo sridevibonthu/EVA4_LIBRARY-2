@@ -58,7 +58,7 @@ class Train:
       
       batchtime = self.runmanager.end_batch(lr)
 
-      pbar.set_description(f'batch duration: {batchtime}')
+      pbar.set_description(f'time: {batchtime:0.2f}, loss: {loss.item():0.4f}')
       
       if self.scheduler:
         self.scheduler.step()
