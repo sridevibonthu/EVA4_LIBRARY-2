@@ -50,7 +50,7 @@ def fgbg_test_train(folder, train=0.8, limit=1):
 def scale_image(image, scale):
     if scale==1:
         return image
-        
+
     return resize(image, (image.shape[0] // scale, image.shape[1] // scale), anti_aliasing=True)
 
 class FGBGDataset(Dataset):
@@ -72,9 +72,14 @@ class FGBGDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        image = scale_image(io.imread(self.images[idx], as_gray=False, pilmode="RGB"), self.scale)
-        mask = scale_image(io.imread(self.masks[idx], as_gray=True, pilmode="1"), self.scale)
-        depth = scale_image(io.imread(self.depths[idx], as_gray=True, pilmode="L"), self.scale)
+        image = io.imread(self.images[idx], as_gray=False, pilmode="RGB")
+        mask = io.imread(self.masks[idx], as_gray=True, pilmode="1")
+        depth = io.imread(self.depths[idx], as_gray=True, pilmode="L")
+
+        image = scale_image(image, self.scale)
+        mask = scale_image(mask, self.scale)
+        depth = scale_image(depth, self.scale)
+        
 
         if self.transform:
             image = self.transform(image)
