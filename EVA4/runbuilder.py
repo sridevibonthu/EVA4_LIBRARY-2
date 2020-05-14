@@ -37,7 +37,7 @@ class RunBuilder():
 # Helper class, help track loss, accuracy, epoch time, run time, 
 # hyper-parameters etc. Also record to TensorBoard and write into csv, json
 class RunManager():
-  def __init__(self, savepath, classification=True, visdecoder={}):
+  def __init__(self, savepath, channel_means, channel_stdevs, classification=True, visdecoder={}):
 
     # tracking every epoch count, loss, accuracy, time
     self.epoch_count = 0
@@ -62,6 +62,8 @@ class RunManager():
     self.network = None
     self.trainloader = None
     self.tb = None
+    self.channel_means = channel_means
+    self.channel_stdevs = channel_stdevs
 
   # record the count, hyper-param, model, trainloader of each run
   # record sample images and network graph to TensorBoard  
@@ -79,7 +81,10 @@ class RunManager():
     self.tb = SummaryWriter(comment=f'-{run}')
 
     images, outcomes = next(iter(self.trainloader))
-    grid = torchvision.utils.make_grid(images[:25])
+    grid = torchvision.utils.make_grid(images[:32])
+    for i in range(grid.size()[0]):
+        grid[i] = grid[i] * self.channel_stdevs[i] + self.channel_means[i]
+        
     self.tb.add_image('images', grid)
     if not self.classification:
         for k, v in self.visdecoder.items():

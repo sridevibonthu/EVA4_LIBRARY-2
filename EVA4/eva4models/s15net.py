@@ -40,7 +40,7 @@ class InitialBlock(nn.Module):
 class S15Net(Net):
   def __init__(self,name="S15Net", planes=32):
     super(S15Net,self).__init__(name)
-    self.prepLayer = InitialBlock()               # IN: 160x160x3, OUT 80x80x128, JUMP = 2, RF = 7
+    self.prepLayer = InitialBlock(planes)               # IN: 160x160x3, OUT 80x80x128, JUMP = 2, RF = 7
     self.layer1 = ResBlock(planes*4, planes, 2)   # RF = 24
     self.layer2 = ResBlock(planes*4, planes, 4)   # RF = 56
     self.layer3 = ResBlock(planes*4, planes, 8)   # RF = 120
@@ -69,7 +69,7 @@ class S15Net(Net):
     # rather than probabilities we are making it a hard mask prediction
     mask = F.sigmoid(self.mask_out(self.mask_conv2(self.mask_conv1(x)))) > 0.5
     mask = mask.float() # cast back to float sicne x is a ByteTensor now
-    
+
     depth = F.sigmoid(self.depth_out(self.depth_conv2(self.depth_conv1(x))))
     # we should be applying sigmoid activation on these and for mask we can even apply threshold of 0.5 to give binary image
     return torch.stack(mask, depth)
