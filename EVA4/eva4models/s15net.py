@@ -49,14 +49,10 @@ class S15Net(Net):
     #self.upres_conv = self.create_conv2d(planes*4, planes*16, kernel_size=(1,1), padding=0) # IN 80x80x128, OUT 80x80x512, RF = 120 
     self.upsample = nn.ConvTranspose2d(planes*4, planes*4, 3, stride=2, padding=1)
     # At this point we will use Pixel Shuffle to make resolution 224x224 
-    self.mask_conv1 = self.create_conv2d(planes*4, planes*4) # IN 160x160x128, OUT 224x224x128, RF = 250
-    self.mask_conv2 = self.create_conv2d(planes*4, planes*8) # IN 224x224x128, OUT 224x224x256, RF = 252
-    self.depth_conv1 = self.create_conv2d(planes*4, planes*4) # IN 224x224x128, OUT 224x224x128, RF = 250
-    self.depth_conv2 = self.create_conv2d(planes*4, planes*8) # IN 224x224x128, OUT 224x224x256, RF = 252
-
-    self.mask_out = self.create_conv2d(planes*8, 1, kernel_size=(1,1), padding=0, bn=False, relu=False) # IN 224x224x256, OUT 224x224x1, RF = 252 
-    self.depth_out = self.create_conv2d(planes*8, 1, kernel_size=(1,1), padding=0, bn=False, relu=False) # IN 224x224x256, OUT 224x224x1, RF = 252 
-
+    self.conv1 = self.create_conv2d(planes*4, planes*4) # IN 160x160x128, OUT 224x224x128, RF = 250
+    self.conv2 = self.create_conv2d(planes*4, planes*8) # IN 224x224x128, OUT 224x224x256, RF = 252
+    self.outconv = self.create_conv2d(planes*8, 2, kernel_size=(1,1), padding=0, bn=False, relu=False) # IN 224x224x256, OUT 224x224x1, RF = 252 
+   
   def forward(self,x):
     data_shape = x.size()
     x = self.prepLayer(x)
@@ -68,9 +64,7 @@ class S15Net(Net):
     #x = F.pixel_shuffle(self.upres_conv(x), 2)
     x = self.upsample(x, output_size=data_shape)
     # rather than probabilities we are making it a hard mask prediction
-    mask = torch.sigmoid(self.mask_out(self.mask_conv2(self.mask_conv1(x)))) # > 0.5
+    # this is not it, we can restore binary logic later
+    out = torch.sigmoid(self.outconv(self.conv2(self.conv1(x)))) # > 0.5
     #mask = mask.float() # cast back to float sicne x is a ByteTensor now
-
-    depth = torch.sigmoid(self.depth_out(self.depth_conv2(self.depth_conv1(x))))
-    # we should be applying sigmoid activation on these and for mask we can even apply threshold of 0.5 to give binary image
-    return torch.stack([mask, depth], dim=1).view(-1, 2, data_shape[-2], data_shape[-1])
+    return out
