@@ -68,8 +68,8 @@ class S15Net(Net):
     #x = F.pixel_shuffle(self.upres_conv(x), 2)
     x = self.upsample(x, output_size=data_shape)
     # rather than probabilities we are making it a hard mask prediction
-    mask = torch.sigmoid(self.mask_out(self.mask_conv2(self.mask_conv1(x)))) > 0.5
-    mask = mask.float() # cast back to float sicne x is a ByteTensor now
+    mask = torch.sigmoid(self.mask_out(self.mask_conv2(self.mask_conv1(x)))) # > 0.5
+    #mask = mask.float() # cast back to float sicne x is a ByteTensor now
 
     depth = torch.sigmoid(self.depth_out(self.depth_conv2(self.depth_conv1(x))))
     # we should be applying sigmoid activation on these and for mask we can even apply threshold of 0.5 to give binary image
