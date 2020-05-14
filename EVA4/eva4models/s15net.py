@@ -66,7 +66,7 @@ class S15Net(Net):
     #x = self.layer4(x)
     
     #x = F.pixel_shuffle(self.upres_conv(x), 2)
-    x = self.upsample(x)
+    x = self.upsample(x, output_size=data_shape)
     # rather than probabilities we are making it a hard mask prediction
     mask = torch.sigmoid(self.mask_out(self.mask_conv2(self.mask_conv1(x)))) > 0.5
     mask = mask.float() # cast back to float sicne x is a ByteTensor now
