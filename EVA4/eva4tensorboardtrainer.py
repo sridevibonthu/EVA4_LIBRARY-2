@@ -87,6 +87,8 @@ class Test:
 class ModelTrainer:
   def __init__(self, model, optimizer, train_loader, test_loader, runmanager, lossfn, scheduler=None, batch_scheduler=False, L1lambda = 0):
     self.model = model
+    print(self.model.device)
+    self.model.to(self.model.device)
     self.scheduler = scheduler
     self.batch_scheduler = batch_scheduler
     self.optimizer = optimizer
