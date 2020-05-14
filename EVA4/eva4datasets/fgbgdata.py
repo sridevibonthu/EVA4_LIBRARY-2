@@ -72,6 +72,8 @@ class FGBGDataset(Dataset):
         if self.transform:
             image = self.transform(image)
 
+        mask = torch.from_numpy(mask/255)
+        depth = torch.from_numpy(depth/255)
         # Scale mask and depth to 0-1 range
         # we need not normalize our outputs
-        return image, torch.from_numpy(np.vstack((mask/255, depth/255)))
+        return image, torch.stack([mask, depth])
