@@ -5,7 +5,6 @@ import numpy as np
 from torch.utils.data import Dataset
 import random
 import re
-from skimage.transform import resize
 
 
 def validatePath(path):
@@ -47,22 +46,17 @@ def fgbg_test_train(folder, train=0.8, limit=1):
     ts = int(l * train)
     return dataset[:ts], dataset[ts:l]
 
-def scale_image(image, scale):
-    if scale==1:
-        return image
-
-    return resize(image, (int(image.shape[0]/scale), int(image.shape[1]/scale)), anti_aliasing=True)
-
 class FGBGDataset(Dataset):
     """Tine Imagenet dataset reader."""
 
-    def __init__(self, data, scale=1, transform=None):
+    def __init__(self, data, image_transform=None, mask_transform=None, depth_transform=None):
         """
         Args:
             data (string): zipped images and labels.
         """
-        self.transform = transform
-        self.scale = scale
+        self.image_transform = image_transform
+        self.mask_transform = mask_transform
+        self.depth_transform = depth_transform
         self.images, self.masks, self.depths = zip(*data)
 
     def __len__(self):
@@ -76,16 +70,17 @@ class FGBGDataset(Dataset):
         mask = io.imread(self.masks[idx], as_gray=True, pilmode="1")
         depth = io.imread(self.depths[idx], as_gray=True, pilmode="L")
 
-        image = scale_image(image, self.scale)
-        mask = scale_image(mask, self.scale)
-        depth = scale_image(depth, self.scale)
-        
+        if self.image_transform:
+            image = self.image_transform(image)
 
-        if self.transform:
-            image = self.transform(image)
+        if self.mask_transform:
+            mask = self.mask_transform(mask)
 
-        mask = torch.from_numpy(mask/255)
-        depth = torch.from_numpy(depth/255)
+        if self.depth_transform:
+            depth = self.depth_transform(depth)
+
+        #mask = torch.from_numpy(mask/255)
+        #depth = torch.from_numpy(depth/255)
         # Scale mask and depth to 0-1 range
         # we need not normalize our outputs
         return image, torch.stack([mask, depth])
