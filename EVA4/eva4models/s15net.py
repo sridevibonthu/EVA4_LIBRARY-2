@@ -58,6 +58,7 @@ class S15Net(Net):
     self.depth_out = self.create_conv2d(planes*8, 1, kernel_size=(1,1), padding=0, bn=False, relu=False) # IN 224x224x256, OUT 224x224x1, RF = 252 
 
   def forward(self,x):
+    data_shape = x.size()
     x=self.prepLayer(x)
     x = self.layer1(x)
     x = self.layer2(x)
@@ -67,9 +68,9 @@ class S15Net(Net):
     x = F.pixel_shuffle(self.upres_conv(x), 2)
 
     # rather than probabilities we are making it a hard mask prediction
-    mask = F.sigmoid(self.mask_out(self.mask_conv2(self.mask_conv1(x)))) > 0.5
+    mask = torch.sigmoid(self.mask_out(self.mask_conv2(self.mask_conv1(x)))) > 0.5
     mask = mask.float() # cast back to float sicne x is a ByteTensor now
 
-    depth = F.sigmoid(self.depth_out(self.depth_conv2(self.depth_conv1(x))))
+    depth = torch.sigmoid(self.depth_out(self.depth_conv2(self.depth_conv1(x))))
     # we should be applying sigmoid activation on these and for mask we can even apply threshold of 0.5 to give binary image
-    return torch.stack([mask, depth])
+    return torch.stack([mask, depth], dim=1).view(-1, 2, data_shape[-2], data_shape[-1])
