@@ -52,7 +52,7 @@ class S15Net(Net):
     self.conv1 = nn.Conv2d(planes*4, planes*4, kernel_size=3, padding=1, stride=1, bias=False)
     self.bn1 = nn.BatchNorm2d(planes*4)
     self.conv2 = nn.Conv2d(planes*4, planes*8, kernel_size=3, padding=1, stride=1, bias=False)
-    self.bn1 = nn.BatchNorm2d(planes*8)
+    self.bn2 = nn.BatchNorm2d(planes*8)
     self.conv3 = nn.Conv2d(planes*8, 2, kernel_size=1, padding=0, stride=1, bias=False)
    
   def forward(self,x):
