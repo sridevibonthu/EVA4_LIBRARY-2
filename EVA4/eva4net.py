@@ -47,9 +47,9 @@ class Net(nn.Module):
       self.trainer = ModelTrainer(self, optimizer, train_loader, test_loader, statspath, scheduler, batch_scheduler, L1lambda)
       self.trainer.run(epochs)
 
-    def trainTensorboard(self, optimizer, train_loader, test_loader, epochs, runmanager, scheduler=None, batch_scheduler=False, L1lambda=0):
-      self.trainer = TBModelTrainer(self, optimizer, train_loader, test_loader, runmanager, scheduler, batch_scheduler, L1lambda)
-      self.trainer.run(epochs)
+    def trainTensorboard(self, optimizer, train_loader, test_loader, epochs, runmanager, runparams, lossfn, scheduler=None, batch_scheduler=False, L1lambda=0):
+      self.trainer = TBModelTrainer(self, optimizer, train_loader, test_loader, runmanager, lossfn, scheduler, batch_scheduler, L1lambda)
+      self.trainer.run(runparams, epochs)
 
     def stats(self):
       return self.trainer.stats if self.trainer else None
