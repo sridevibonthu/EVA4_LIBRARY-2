@@ -75,7 +75,8 @@ class Test:
   def run(self):
     self.model.eval()
     with torch.no_grad():
-        for data, target in self.dataloader:
+        pbar = tqdm(self.dataloader)
+        for data, target in pbar:
             data, target = data.to(self.model.device), target.to(self.model.device)
             output = self.model(data)
             loss = self.lossfn(output, target)
@@ -83,7 +84,7 @@ class Test:
             self.runmanager.track_test_num_correct(output, target)
         
         if self.scheduler and isinstance(self.scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-              print("In scheduler step with loss of ", self.runmanager.get_test_loss())
+              pbar.write("In scheduler step with loss of ", self.runmanager.get_test_loss())
               self.scheduler.step(self.runmanager.get_test_loss())
             
 class ModelTrainer:

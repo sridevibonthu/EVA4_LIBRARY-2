@@ -169,7 +169,8 @@ class RunManager():
     results["run duration"] = run_duration   
     
     # Record hyper-params into 'results'
-    for k,v in self.run_params._asdict().items(): results[k] = v
+    for k,v in self.run_params.items(): 
+        results[k] = v
     self.run_data.append(results)
     
     return f'{results}'
