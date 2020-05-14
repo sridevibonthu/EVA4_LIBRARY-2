@@ -1,4 +1,4 @@
-from tqdm import tqdm_notebook, tnrange
+from tqdm.notebook import trange, tqdm
 from eva4modelstats import ModelStats
 import torch.nn.functional as F
 import torch
@@ -13,10 +13,11 @@ class Train:
     self.runmanager = runmanager
     self.L1lambda = L1lambda
     self.lossfn = lossfn
+    print("initialized trainer with ", self.model.device)
 
   def run(self):
     self.model.train()
-    pbar = tqdm_notebook(self.dataloader)
+    pbar = tqdm(self.dataloader)
     for data, target in pbar:
       self.runmanager.begin_batch()
       print("batch mapping to:", self.model.device)
@@ -70,6 +71,7 @@ class Test:
     self.scheduler = scheduler
     self.lossfn = lossfn
     self.loss=0.0
+    print("initialized tester with ", self.model.device)
 
   def run(self):
     self.model.eval()
@@ -101,7 +103,7 @@ class ModelTrainer:
     self.test = Test(model, test_loader, self.runmanager, self.lossfn, self.scheduler)
 
   def run(self, tbrun, epochs=10):
-    pbar = tqdm_notebook(range(1, epochs+1), desc="Epochs")
+    pbar = tqdm(range(1, epochs+1), desc="Epochs")
     self.runmanager.begin_run(tbrun, self.model, self.train_loader, self.test_loader)
     for epoch in pbar:
       self.runmanager.begin_epoch()
