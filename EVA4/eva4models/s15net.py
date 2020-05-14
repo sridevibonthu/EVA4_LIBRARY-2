@@ -47,13 +47,13 @@ class S15Net(Net):
     #self.layer4 = ResBlock(planes*4, planes, 16)  # RF = 248
 
     #self.upres_conv = self.create_conv2d(planes*4, planes*16, kernel_size=(1,1), padding=0) # IN 80x80x128, OUT 80x80x512, RF = 120 
-    self.upsample = nn.ConvTranspose2d(planes*4, planes*4, 3, stride=2, padding=1)
+    self.upsample = nn.ConvTranspose2d(planes*4, planes*4, kernel_size=3, stride=2, padding=1)
     # At this point we will use Pixel Shuffle to make resolution 224x224 
     self.conv1 = nn.Conv2d(planes*4, planes*4, kernel_size=3, padding=1, stride=1, bias=False)
     self.bn1 = nn.BatchNorm2d(planes*4)
     self.conv2 = nn.Conv2d(planes*4, planes*8, kernel_size=3, padding=1, stride=1, bias=False)
     self.bn1 = nn.BatchNorm2d(planes*8)
-    self.conv3 = self.create_conv2d(planes*8, 2, kernel_size=(1,1), padding=0, bn=False, relu=False) # IN 224x224x256, OUT 224x224x1, RF = 252 
+    self.conv3 = nn.Conv2d(planes*8, 2, kernel_size=1, padding=0, stride=1, bias=False)
    
   def forward(self,x):
     data_shape = x.size()
