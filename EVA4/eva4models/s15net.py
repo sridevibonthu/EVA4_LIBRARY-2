@@ -64,11 +64,11 @@ class S15Net(Net):
     #x = self.layer4(x)
     
     #x = F.pixel_shuffle(self.upres_conv(x), 2)
-    x = self.upsample(x, output_size=data_shape)
+    out = self.upsample(x, output_size=data_shape)
     # rather than probabilities we are making it a hard mask prediction
     # this is not it, we can restore binary logic later
 
-    out = F.relu(self.bn1(self.conv1(x)))
+    out = F.relu(self.bn1(self.conv1(out)))
     out = F.relu(self.bn2(self.conv2(out)))
     out = torch.sigmoid(self.conv3(out))
     #mask = mask.float() # cast back to float sicne x is a ByteTensor now
