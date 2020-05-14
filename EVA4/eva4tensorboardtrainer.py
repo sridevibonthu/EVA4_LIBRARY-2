@@ -20,7 +20,7 @@ class Train:
     pbar = tqdm(self.dataloader)
     for data, target in pbar:
       self.runmanager.begin_batch()
-      print("batch mapping to:", self.model.device)
+      # print("batch mapping to:", self.model.device)
       # get samples
       data, target = data.to(self.model.device), target.to(self.model.device)
 

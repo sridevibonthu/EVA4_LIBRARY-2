@@ -85,7 +85,7 @@ class RunManager():
     self.network = network
     self.trainloader = trainloader
     self.testloader = testloader
-    
+
     import socket
     from datetime import datetime
     current_time = datetime.now().strftime('%b%d_%H-%M-%S')
@@ -102,7 +102,7 @@ class RunManager():
     self.tb.add_image('images', grid)
     self.sample_outcomes(outcomes)
     
-    self.tb.add_graph(self.network, images)
+    self.tb.add_graph(self.network, images.to(self.network.device))
 
   # when run ends, close TensorBoard, zero epoch count
   def end_run(self):
