@@ -92,6 +92,8 @@ class ModelTrainer:
     self.optimizer = optimizer
     self.runmanager = runmanager
     self.lossfn = lossfn
+    self.train_loader = train_loader
+    self.test_loader = test_loader
     self.train = Train(model, train_loader, optimizer, self.runmanager, self.lossfn, self.scheduler if self.batch_scheduler else None, L1lambda)
     self.test = Test(model, test_loader, self.runmanager, self.lossfn, self.scheduler)
 

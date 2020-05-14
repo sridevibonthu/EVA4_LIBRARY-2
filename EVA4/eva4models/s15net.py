@@ -7,7 +7,7 @@ class ResBlock(nn.Module):
     def __init__(self, inplanes, planes, dilation):
         super(ResBlock, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, padding=0, stride=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(32)
+        self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes*2, kernel_size=3, padding=dilation, stride=1, dilation=dilation, bias=False)
         self.bn2 = nn.BatchNorm2d(planes*2)
         self.conv3 = nn.Conv2d(planes*2, planes*4, kernel_size=3, padding=dilation, stride=1, dilation=dilation, bias=False)
@@ -72,4 +72,4 @@ class S15Net(Net):
 
     depth = F.sigmoid(self.depth_out(self.depth_conv2(self.depth_conv1(x))))
     # we should be applying sigmoid activation on these and for mask we can even apply threshold of 0.5 to give binary image
-    return torch.stack(mask, depth)
+    return torch.stack([mask, depth])

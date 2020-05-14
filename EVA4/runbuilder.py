@@ -65,6 +65,14 @@ class RunManager():
     self.channel_means = channel_means
     self.channel_stdevs = channel_stdevs
 
+  def sample_outcomes(self, outcomes):
+    if not self.classification:
+        l = 0
+        for k, v in self.visdecoder.items():
+            vgrid = torchvision.utils.make_grid(outcomes[:32,l:v,:,:])
+            l = v
+            self.tb.add_image(k, vgrid)
+
   # record the count, hyper-param, model, trainloader of each run
   # record sample images and network graph to TensorBoard  
   def begin_run(self, run, network, trainloader, testloader):
@@ -77,19 +85,22 @@ class RunManager():
     self.network = network
     self.trainloader = trainloader
     self.testloader = testloader
+    
+    import socket
+    from datetime import datetime
+    current_time = datetime.now().strftime('%b%d_%H-%M-%S')
+    log_dir = os.path.join(self.savepath, 
+        f'runs/{current_time}_{socket.gethostname()}-{run}')
 
-    self.tb = SummaryWriter(comment=f'-{run}')
+    self.tb = SummaryWriter(log_dir)
 
     images, outcomes = next(iter(self.trainloader))
     grid = torchvision.utils.make_grid(images[:32])
     for i in range(grid.size()[0]):
         grid[i] = grid[i] * self.channel_stdevs[i] + self.channel_means[i]
-        
+
     self.tb.add_image('images', grid)
-    if not self.classification:
-        for k, v in self.visdecoder.items():
-            vgrid = torchvision.utils.make_grid(outcomes[:25,v,:,:])
-            self.tb.add_image(k, vgrid)
+    self.sample_outcomes(outcomes)
     
     self.tb.add_graph(self.network, images)
 
@@ -132,10 +143,7 @@ class RunManager():
     self.tb.add_scalar('Learning Rate', lr, self.epoch_count)
 
     # output sample images created in test
-    if not self.classification:
-        for k, v in self.visdecoder.items():
-            vgrid = torchvision.utils.make_grid(self.test_outputs[:25,v,:,:])
-            self.tb.add_image(f'{k} result epoch {self.epoch_count}', vgrid)
+    self.sample_outcomes(self.test_outputs)
 
     results = OrderedDict()
     results["run"] = self.run_count

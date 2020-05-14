@@ -38,6 +38,8 @@ class Net(nn.Module):
         self.trainer = None
         self.name = name
 
+    #TODO: initialize weights using Kaiming He method
+
     def summary(self, input_size): #input_size=(1, 28, 28)
       summary(self, input_size=input_size)
 
