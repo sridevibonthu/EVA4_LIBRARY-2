@@ -42,12 +42,12 @@ class S15Net(Net):
     super(S15Net,self).__init__(name)
     self.prepLayer = InitialBlock(planes)               # IN: 160x160x3, OUT 80x80x128, JUMP = 2, RF = 7
     self.layer1 = ResBlock(planes*4, planes, 2)   # RF = 24
-    self.layer2 = ResBlock(planes*4, planes, 4)   # RF = 56
-    self.layer3 = ResBlock(planes*4, planes, 8)   # RF = 120
+    self.layer2 = ResBlock(planes*4, planes, 3)   # RF = 56
+    self.layer3 = ResBlock(planes*4, planes, 4)   # RF = 120
     #self.layer4 = ResBlock(planes*4, planes, 16)  # RF = 248
 
-    #self.upres_conv = self.create_conv2d(planes*4, planes*16, kernel_size=(1,1), padding=0) # IN 80x80x128, OUT 80x80x512, RF = 120 
-    self.upsample = nn.ConvTranspose2d(planes*4, planes*4, kernel_size=3, stride=2, padding=1)
+    self.upsample = self.create_conv2d(planes*4, planes*16, kernel_size=(1,1), padding=0) # IN 80x80x128, OUT 80x80x512, RF = 120 
+    #self.upsample = nn.ConvTranspose2d(planes*4, planes*4, kernel_size=3, stride=2, padding=1)
     # At this point we will use Pixel Shuffle to make resolution 224x224 
     self.conv1 = nn.Conv2d(planes*4, planes*4, kernel_size=3, padding=1, stride=1, bias=False)
     self.bn1 = nn.BatchNorm2d(planes*4)
@@ -62,9 +62,9 @@ class S15Net(Net):
     x = self.layer2(x)
     x = self.layer3(x)
     #x = self.layer4(x)
-    
-    #x = F.pixel_shuffle(self.upres_conv(x), 2)
+  
     out = self.upsample(x, output_size=data_shape)
+    out = F.pixel_shuffle(out, 2)
     # rather than probabilities we are making it a hard mask prediction
     # this is not it, we can restore binary logic later
 
@@ -73,6 +73,7 @@ class S15Net(Net):
     out = self.conv3(out)
     outshape = out.size()
 
+    # min max scaling
     y = out.view(outshape[0], outshape[1], -1) 
     y = y - y.min(2, keepdim=True)[0]
     y = y/(y.max(2, keepdim=True)[0] )
