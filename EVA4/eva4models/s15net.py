@@ -27,14 +27,14 @@ class InitialBlock(nn.Module):
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes*2, kernel_size=3, padding=1, stride=1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes*2)
-        self.conv3 = nn.Conv2d(planes*2, planes*4, kernel_size=3, padding=1, stride=1, bias=False)
+        self.conv3 = nn.Conv2d(planes*2, planes*4, kernel_size=3, padding=1, stride=2, bias=False)
         self.bn3 = nn.BatchNorm2d(planes*4)
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
         out = F.relu(self.bn2(self.conv2(out)))
         out = F.relu(self.bn3(self.conv3(out)))
-        return  F.max_pool2d(out, 2)
+        return  out
 
 #implementation of the new resnet model
 class S15Net(Net):
