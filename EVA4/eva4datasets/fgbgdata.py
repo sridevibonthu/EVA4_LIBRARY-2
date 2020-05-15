@@ -67,8 +67,9 @@ class FGBGDataset(Dataset):
             idx = idx.tolist()
 
         image = io.imread(self.images[idx], as_gray=False, pilmode="RGB")
-        mask = io.imread(self.masks[idx], as_gray=True, pilmode="1")
-        depth = io.imread(self.depths[idx], as_gray=True, pilmode="L")
+        # for grayscale images tensor will need to transpose it.
+        mask = io.imread(self.masks[idx], as_gray=True, pilmode="1").T 
+        depth = io.imread(self.depths[idx], as_gray=True, pilmode="L").T
 
         if self.image_transform:
             image = self.image_transform(image)
