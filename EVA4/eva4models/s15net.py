@@ -73,9 +73,9 @@ class S15Net(Net):
     out = self.conv3(out)
     outshape = out.size()
 
-    y = out.view(outshape[0], -1) 
-    y = y - y.min(1, keepdim=True)[0]
-    y = y/(y.max(1, keepdim=True)[0] )
+    y = out.view(outshape[0], outshape[1], -1) 
+    y = y - y.min(2, keepdim=True)[0]
+    y = y/(y.max(2, keepdim=True)[0] )
     y = y.view(outshape)
     #mask = mask.float() # cast back to float sicne x is a ByteTensor now
     return y
