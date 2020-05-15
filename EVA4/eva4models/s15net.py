@@ -63,7 +63,8 @@ class S15Net(Net):
     x = self.layer3(x)
     #x = self.layer4(x)
   
-    out = self.upsample(x, output_size=data_shape)
+    #out = self.upsample(x, output_size=data_shape)
+    out = self.upsample(x)
     out = F.pixel_shuffle(out, 2)
     # rather than probabilities we are making it a hard mask prediction
     # this is not it, we can restore binary logic later
