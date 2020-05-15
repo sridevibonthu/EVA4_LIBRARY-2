@@ -17,8 +17,8 @@ class ResBlock(nn.Module):
         out = F.relu(self.bn1(self.conv1(x)))
         out = F.relu(self.bn2(self.conv2(out)))
         out = F.relu(self.bn3(self.conv3(out)))
-        x = x + out
-        return x
+        #x = x + out
+        return out
 
 class InitialBlock(nn.Module):
     def __init__(self, planes):
@@ -70,6 +70,12 @@ class S15Net(Net):
 
     out = F.relu(self.bn1(self.conv1(out)))
     out = F.relu(self.bn2(self.conv2(out)))
-    out = torch.sigmoid(self.conv3(out))
+    out = self.conv3(out)
+    outshape = out.size()
+
+    y = out.view(outshape[0], -1) 
+    y = y - y.min(1, keepdim=True)[0]
+    y = y/(y.max(1, keepdim=True)[0] )
+    y = y.view(outshape)
     #mask = mask.float() # cast back to float sicne x is a ByteTensor now
-    return out
+    return y
