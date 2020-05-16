@@ -28,12 +28,13 @@ class S15Net3(Net):
     self.prepLayer = InitialBlock(16)               # IN: 160x160x3, OUT 80x80x128, JUMP = 2, RF = 7
     self.encoder = ResNet18Encoder()
 
-    self.upsample = self.create_conv2d(128, 512, kernel_size=(1,1), padding=0) # IN 80x80x128, OUT 80x80x512, RF = 120 
-    
-    self.conv1 = nn.Conv2d(128, 128, kernel_size=3, padding=1, stride=1, bias=False)
-    self.bn1 = nn.BatchNorm2d(128)
-    self.conv2 = nn.Conv2d(128, 128, kernel_size=3, padding=1, stride=1, bias=False)
+    self.conv1 = nn.Conv2d(32, 64, kernel_size=3, padding=1, stride=1, bias=False)
+    self.bn1 = nn.BatchNorm2d(64)
+    self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1, stride=1, bias=False)
     self.bn2 = nn.BatchNorm2d(128)
+
+    self.upsample = self.create_conv2d(128, 512, kernel_size=(1,1), padding=0) # IN 80x80x128, OUT 80x80x512, RF = 120 
+
     self.conv3 = nn.Conv2d(128, 128, kernel_size=3, padding=1, stride=1, bias=False)
     self.bn3 = nn.BatchNorm2d(128)
 
@@ -45,7 +46,7 @@ class S15Net3(Net):
     x = self.prepLayer(x)
     x = self.encoder(x)
   
-    out = F.pixel_shuffle(x, 2) # 128 channels
+    out = F.pixel_shuffle(x, 4) # 32 channels
     out = F.relu(self.bn1(self.conv1(out)))
     out = F.relu(self.bn2(self.conv2(out)))
 
