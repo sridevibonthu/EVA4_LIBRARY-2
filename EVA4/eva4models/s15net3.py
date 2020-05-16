@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from eva4net import Net
-from eva4net.eva4resnet import ResNet18Encoder, ResNet34Encoder
+from .eva4resnet import ResNet18Encoder, ResNet34Encoder
 # this will be encoder decoder with standard Resnet18 in beginning
 
 class InitialBlock(nn.Module):
@@ -27,11 +27,11 @@ class S15Net3(Net):
     super(S15Net3,self).__init__(name)
     self.prepLayer = InitialBlock(16)               # IN: 160x160x3, OUT 80x80x128, JUMP = 2, RF = 7
     self.encoder = ResNet18Encoder()
-    #self.layer4 = ResBlock(planes*4, planes, 16)  # RF = 248
-    self.upsample1 = self.create_conv2d(128, 512, kernel_size=(1,1), padding=0) # IN 80x80x128, OUT 80x80x512, RF = 120 
+
+    self.upsample = self.create_conv2d(128, 512, kernel_size=(1,1), padding=0) # IN 80x80x128, OUT 80x80x512, RF = 120 
+    
     self.conv1 = nn.Conv2d(128, 128, kernel_size=3, padding=1, stride=1, bias=False)
     self.bn1 = nn.BatchNorm2d(128)
-    self.upsample2 = self.create_conv2d(128, 512, kernel_size=(1,1), padding=0)
     self.conv2 = nn.Conv2d(128, 128, kernel_size=3, padding=1, stride=1, bias=False)
     self.bn2 = nn.BatchNorm2d(128)
     self.conv3 = nn.Conv2d(128, 128, kernel_size=3, padding=1, stride=1, bias=False)
@@ -45,13 +45,11 @@ class S15Net3(Net):
     x = self.prepLayer(x)
     x = self.encoder(x)
   
-    #out = self.upsample(x, output_size=data_shape)
-    out = self.upsample1(x)
-    out = F.pixel_shuffle(out, 2)
+    out = F.pixel_shuffle(x, 2) # 128 channels
     out = F.relu(self.bn1(self.conv1(out)))
 
-    out = self.upsample2(out)
-    out = F.pixel_shuffle(out, 2)
+    out = self.upsample(out) # 512
+    out = F.pixel_shuffle(out, 2) # 128
     out = F.relu(self.bn2(self.conv2(out)))
     out = F.relu(self.bn3(self.conv3(out)))
     out = self.conv4(out)
