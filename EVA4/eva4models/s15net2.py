@@ -39,7 +39,7 @@ class InitialBlock(nn.Module):
 
 #implementation of the new resnet model
 class S15Net2(Net):
-  def __init__(self,name="S15Net2", classes=16, planes=32):
+  def __init__(self,name="S15Net2", outchannels=2, planes=32):
     super(S15Net2,self).__init__(name)
     self.prepLayer = InitialBlock(planes)               # IN: 160x160x3, OUT 80x80x128, JUMP = 2, RF = 7
     self.layer1 = ResBlock(planes*4, planes, 2)   # RF = 24
@@ -56,7 +56,7 @@ class S15Net2(Net):
     self.bn2 = nn.BatchNorm2d(planes*8)
 
     # we will quantize depth in 16 classes.
-    self.conv3 = nn.Conv2d(planes*8, classes, kernel_size=1, padding=0, stride=1, bias=False)
+    self.conv3 = nn.Conv2d(planes*8, outchannels, kernel_size=1, padding=0, stride=1, bias=False)
    
   def forward(self,x):
     data_shape = x.size()
