@@ -68,13 +68,13 @@ class Train:
       # Predict
       y_pred = self.model(data)
 
-      if onehotclasses:
-        actual_target = combine_classes(target, onehotclasses, self.model.device)
-      else:
-        actual_target = target
+      # if onehotclasses:
+      #   actual_target = combine_classes(target, onehotclasses, self.model.device)
+      # else:
+      #   actual_target = target
 
       # Calculate loss
-      loss = self.lossfn(y_pred, actual_target)
+      loss = self.lossfn(y_pred, target)
 
       #Implementing L1 regularization
       if self.L1lambda > 0:

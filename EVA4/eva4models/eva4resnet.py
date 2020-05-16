@@ -63,8 +63,9 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(Net):
-    def __init__(self, block, num_blocks, num_classes=10, name="Resnet", droupout=0):
+    def __init__(self, block, num_blocks, full=True, num_classes=10, name="Resnet", droupout=0):
         super(ResNet, self).__init__(name)
+        self.full = full
         self.in_planes = 64
         self.num_classes = num_classes
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
@@ -87,11 +88,18 @@ class ResNet(Net):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
+        if self.full:
+            out = F.relu(self.bn1(self.conv1(x)))
+        else:
+            out = x
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
+
+        if not self.full:
+            return out
+
         out = F.avg_pool2d(out, out.size(-1))
         #out = out.view(out.size(0), -1)
         #out = self.linear(out)
@@ -101,6 +109,12 @@ class ResNet(Net):
         out = out.view(-1, self.num_classes)
         return F.log_softmax(out, dim=-1)
 
+
+def ResNet18Encoder(name="Resnet18Encoder"):
+    return ResNet(BasicBlock, [2,2,2,2], full=False, name=name)
+
+def ResNet34Encoder(name="Resnet34Encoder"):
+    return ResNet(BasicBlock, [3,4,6,3], full=False, name=name)
 
 def ResNet18(name="Resnet18", num_classes=10):
     return ResNet(BasicBlock, [2,2,2,2], num_classes=num_classes, name=name)
