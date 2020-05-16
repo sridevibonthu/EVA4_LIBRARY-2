@@ -46,10 +46,28 @@ def fgbg_test_train(folder, train=0.8, limit=1):
     ts = int(l * train)
     return dataset[:ts], dataset[ts:l]
 
+def make_one_hot(labels, num_classes):
+    '''
+    Converts an integer label torch.autograd.Variable to a one-hot Variable.
+
+    Parameters
+    ----------
+    labels : torch.autograd.Variable of torch.cuda.LongTensor
+        N x 1 x H x W, where N is batch size.
+        Each value is an integer representing correct classification.
+    Returns
+    -------
+    target : torch.autograd.Variable of torch.cuda.FloatTensor
+        N x C x H x W, where C is class number. One-hot encoded.
+    '''
+    one_hot = torch.FloatTensor(labels.size(0), num_classes, labels.size(2), labels.size(3)).zero_()
+    target = one_hot.scatter_(1, labels.data, 1) 
+    return target
+
 class FGBGDataset(Dataset):
     """Tine Imagenet dataset reader."""
 
-    def __init__(self, data, image_transform=None, mask_transform=None, depth_transform=None):
+    def __init__(self, data, quantize=None, image_transform=None, mask_transform=None, depth_transform=None):
         """
         Args:
             data (string): zipped images and labels.
@@ -58,6 +76,9 @@ class FGBGDataset(Dataset):
         self.mask_transform = mask_transform
         self.depth_transform = depth_transform
         self.images, self.masks, self.depths = zip(*data)
+        self.quantize = quantize
+        if quantize and len(quantize) != 2:
+            raise ValueError("quatize must be a a tuple of two integers")
 
     def __len__(self):
         return len(self.images)
@@ -84,4 +105,12 @@ class FGBGDataset(Dataset):
         #depth = torch.from_numpy(depth/255)
         # Scale mask and depth to 0-1 range
         # we need not normalize our outputs
-        return image, torch.stack([mask, depth])
+        if not self.quantize:
+            return image, torch.stack([mask, depth])
+        
+        m = (mask*quantize[0]).int()
+        
+        d = (depth*quantize[1]).int()
+        d = make_one_hot(d, quantize[1])[1:, : ,:]
+
+            

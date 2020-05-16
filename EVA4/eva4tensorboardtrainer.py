@@ -3,9 +3,43 @@ from eva4modelstats import ModelStats
 import torch.nn.functional as F
 import torch
 
+def make_one_hot(labels, num_classes, device):
+    '''
+    Converts an integer label torch.autograd.Variable to a one-hot Variable.
+
+    Parameters
+    ----------
+    labels : torch.autograd.Variable of torch.cuda.LongTensor
+        N x 1 x H x W, where N is batch size.
+        Each value is an integer representing correct classification.
+    Returns
+    -------
+    target : torch.autograd.Variable of torch.cuda.FloatTensor
+        N x C x H x W, where C is class number. One-hot encoded.
+    '''
+    if device == 'cuda':
+      one_hot = torch.cuda.FloatTensor(labels.size(0), num_classes, labels.size(2), labels.size(3)).zero_()
+    else:
+      one_hot = torch.FloatTensor(labels.size(0), num_classes, labels.size(2), labels.size(3)).zero_()
+    target = one_hot.scatter_(1, labels.data, 1) 
+    return target
+
+def combine_classes(labels, onehotclasses, device):
+  l = (labels[:, :1, :, :]*onehotclasses[0]).int()
+  v = make_one_hot(l, onehotclasses[0], device)[:, 1:, :, :]
+  j = 1
+  for i in range(1, len(onehotclasses)):
+    l = (labels[:, j:j+1, :, :]*onehotclasses[i]).int()
+    x = make_one_hot(l, onehotclasses[i], device)[:, 1:, :, :]
+    j = j+1
+    v = torch.cat((v,x), 1)
+
+  return v
+
+
 # https://github.com/tqdm/tqdm
 class Train:
-  def __init__(self, model, dataloader, optimizer, runmanager, lossfn, scheduler=None, L1lambda = 0):
+  def __init__(self, model, dataloader, optimizer, runmanager, lossfn, scheduler=None, L1lambda = 0, onehotclasses=None):
     self.model = model
     self.dataloader = dataloader
     self.optimizer = optimizer
@@ -13,6 +47,8 @@ class Train:
     self.runmanager = runmanager
     self.L1lambda = L1lambda
     self.lossfn = lossfn
+    self.onehotclasses = onehotclasses
+
     print("initialized trainer with ", self.model.device)
 
   def run(self):
@@ -32,8 +68,13 @@ class Train:
       # Predict
       y_pred = self.model(data)
 
+      if onehotclasses:
+        actual_target = combine_classes(target, onehotclasses, self.model.device)
+      else:
+        actual_target = target
+        
       # Calculate loss
-      loss = self.lossfn(y_pred, target)
+      loss = self.lossfn(y_pred, actual_target)
 
       #Implementing L1 regularization
       if self.L1lambda > 0:
@@ -64,12 +105,13 @@ class Train:
         self.scheduler.step()
 
 class Test:
-  def __init__(self, model, dataloader, runmanager, lossfn, scheduler=None):
+  def __init__(self, model, dataloader, runmanager, lossfn, scheduler=None, onehotclasses=None):
     self.model = model
     self.dataloader = dataloader
     self.runmanager = runmanager
     self.scheduler = scheduler
     self.lossfn = lossfn
+    self.onehotclasses = onehotclasses
     print("initialized tester with ", self.model.device)
 
   def run(self):
@@ -88,7 +130,7 @@ class Test:
               self.scheduler.step(self.runmanager.get_test_loss())
             
 class ModelTrainer:
-  def __init__(self, model, optimizer, train_loader, test_loader, runmanager, lossfn, scheduler=None, batch_scheduler=False, L1lambda = 0):
+  def __init__(self, model, optimizer, train_loader, test_loader, runmanager, lossfn, scheduler=None, batch_scheduler=False, L1lambda = 0, onehotclasses=None):
     self.model = model
     print(self.model.device)
     self.model.to(self.model.device)
@@ -99,8 +141,8 @@ class ModelTrainer:
     self.lossfn = lossfn
     self.train_loader = train_loader
     self.test_loader = test_loader
-    self.train = Train(model, train_loader, optimizer, self.runmanager, self.lossfn, self.scheduler if self.batch_scheduler else None, L1lambda)
-    self.test = Test(model, test_loader, self.runmanager, self.lossfn, self.scheduler)
+    self.train = Train(model, train_loader, optimizer, self.runmanager, self.lossfn, self.scheduler if self.batch_scheduler else None, L1lambda, onehotclasses)
+    self.test = Test(model, test_loader, self.runmanager, self.lossfn, self.scheduler, onehotclasses)
 
   def run(self, tbrun, epochs=10):
     pbar = tqdm(range(1, epochs+1), desc="Epochs")

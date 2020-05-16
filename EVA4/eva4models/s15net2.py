@@ -16,8 +16,9 @@ class ResBlock(nn.Module):
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
         out = F.relu(self.bn2(self.conv2(out)))
-        out = F.relu(self.bn3(self.conv3(out)))
-        #x = x + out
+        out = self.bn3(self.conv3(out))
+        out = x + out
+        out = F.relu(out)
         return out
 
 class InitialBlock(nn.Module):
@@ -38,12 +39,12 @@ class InitialBlock(nn.Module):
 
 #implementation of the new resnet model
 class S15Net2(Net):
-  def __init__(self,name="S15Net2", planes=32):
+  def __init__(self,name="S15Net2", classes=16, planes=32):
     super(S15Net2,self).__init__(name)
     self.prepLayer = InitialBlock(planes)               # IN: 160x160x3, OUT 80x80x128, JUMP = 2, RF = 7
     self.layer1 = ResBlock(planes*4, planes, 2)   # RF = 24
-    self.layer2 = ResBlock(planes*4, planes, 3)   # RF = 56
-    self.layer3 = ResBlock(planes*4, planes, 4)   # RF = 120
+    self.layer2 = ResBlock(planes*4, planes, 3)   # RF = 48
+    self.layer3 = ResBlock(planes*4, planes, 4)   # RF = 80
     #self.layer4 = ResBlock(planes*4, planes, 16)  # RF = 248
 
     self.upsample = self.create_conv2d(planes*4, planes*16, kernel_size=(1,1), padding=0) # IN 80x80x128, OUT 80x80x512, RF = 120 
@@ -53,7 +54,9 @@ class S15Net2(Net):
     self.bn1 = nn.BatchNorm2d(planes*4)
     self.conv2 = nn.Conv2d(planes*4, planes*8, kernel_size=3, padding=1, stride=1, bias=False)
     self.bn2 = nn.BatchNorm2d(planes*8)
-    self.conv3 = nn.Conv2d(planes*8, 2, kernel_size=1, padding=0, stride=1, bias=False)
+
+    # we will quantize depth in 16 classes.
+    self.conv3 = nn.Conv2d(planes*8, classes, kernel_size=1, padding=0, stride=1, bias=False)
    
   def forward(self,x):
     data_shape = x.size()
