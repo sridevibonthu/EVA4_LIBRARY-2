@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from eva4net import Net
-from eva4resnet import ResNet18Encoder, ResNet34Encoder
+from eva4net.eva4resnet import ResNet18Encoder, ResNet34Encoder
 # this will be encoder decoder with standard Resnet18 in beginning
 
 class InitialBlock(nn.Module):
