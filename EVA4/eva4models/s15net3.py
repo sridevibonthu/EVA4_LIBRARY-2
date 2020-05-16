@@ -47,10 +47,10 @@ class S15Net3(Net):
   
     out = F.pixel_shuffle(x, 2) # 128 channels
     out = F.relu(self.bn1(self.conv1(out)))
+    out = F.relu(self.bn2(self.conv2(out)))
 
     out = self.upsample(out) # 512
     out = F.pixel_shuffle(out, 2) # 128
-    out = F.relu(self.bn2(self.conv2(out)))
     out = F.relu(self.bn3(self.conv3(out)))
     out = self.conv4(out)
     outshape = out.size()
