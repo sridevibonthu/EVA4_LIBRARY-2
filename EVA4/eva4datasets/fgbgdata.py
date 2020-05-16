@@ -67,7 +67,7 @@ def make_one_hot(labels, num_classes):
 class FGBGDataset(Dataset):
     """Tine Imagenet dataset reader."""
 
-    def __init__(self, data, quantize=None, image_transform=None, mask_transform=None, depth_transform=None):
+    def __init__(self, data, image_transform=None, mask_transform=None, depth_transform=None):
         """
         Args:
             data (string): zipped images and labels.
@@ -76,9 +76,6 @@ class FGBGDataset(Dataset):
         self.mask_transform = mask_transform
         self.depth_transform = depth_transform
         self.images, self.masks, self.depths = zip(*data)
-        self.quantize = quantize
-        if quantize and len(quantize) != 2:
-            raise ValueError("quatize must be a a tuple of two integers")
 
     def __len__(self):
         return len(self.images)
@@ -101,16 +98,8 @@ class FGBGDataset(Dataset):
         if self.depth_transform:
             depth = self.depth_transform(depth)
 
-        #mask = torch.from_numpy(mask/255)
-        #depth = torch.from_numpy(depth/255)
-        # Scale mask and depth to 0-1 range
-        # we need not normalize our outputs
-        if not self.quantize:
-            return image, torch.stack([mask, depth])
+
+        return image, torch.stack([mask, depth])
         
-        m = (mask*quantize[0]).int()
-        
-        d = (depth*quantize[1]).int()
-        d = make_one_hot(d, quantize[1])[1:, : ,:]
 
             

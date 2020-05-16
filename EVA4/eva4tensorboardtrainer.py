@@ -72,7 +72,7 @@ class Train:
         actual_target = combine_classes(target, onehotclasses, self.model.device)
       else:
         actual_target = target
-        
+
       # Calculate loss
       loss = self.lossfn(y_pred, actual_target)
 
@@ -94,7 +94,7 @@ class Train:
       if self.scheduler:
         lr = self.scheduler.get_last_lr()[0]
       else:
-        # not recalling why i used sekf.optimizer.lr_scheduler.get_last_lr[0]
+        # not recalling why i used self.optimizer.lr_scheduler.get_last_lr[0]
         lr = self.optimizer.param_groups[0]['lr']
       
       batchtime = self.runmanager.end_batch(lr)
