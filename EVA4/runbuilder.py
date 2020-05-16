@@ -144,6 +144,7 @@ class RunManager():
 
     # output sample images created in test
     self.sample_outcomes(self.test_output, f'output-{self.epoch_count}')
+    self.sample_outcomes(self.test_input, f'input-{self.epoch_count}')
 
     results = OrderedDict()
     results["run"] = self.run_count
