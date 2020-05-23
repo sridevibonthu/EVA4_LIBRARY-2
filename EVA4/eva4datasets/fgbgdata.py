@@ -121,4 +121,4 @@ class FGBGDataset(Dataset):
         # now we need to take 4 images and put them with one another
         # also we need to shuffle every time
         # we need to use 
-        return image, torch.stack([mask, depth])
+        return image.float(), torch.stack([mask, depth]).float()
