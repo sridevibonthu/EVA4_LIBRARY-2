@@ -64,6 +64,18 @@ def make_one_hot(labels, num_classes):
     target = one_hot.scatter_(1, labels.data, 1) 
     return target
 
+def combine_classes(labels, onehotclasses, device):
+  l = (labels[:, :1, :, :]*onehotclasses[0]).long()
+  v = make_one_hot(l, onehotclasses[0], device)[:, 1:, :, :]
+  j = 1
+  for i in range(1, len(onehotclasses)):
+    l = (labels[:, j:j+1, :, :]*onehotclasses[i]).long()
+    x = make_one_hot(l, onehotclasses[i], device)[:, 1:, :, :]
+    j = j+1
+    v = torch.cat((v,x), 1)
+
+  return v
+
 class FGBGDataset(Dataset):
     """Tine Imagenet dataset reader."""
 
