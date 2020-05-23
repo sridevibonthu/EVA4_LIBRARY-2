@@ -75,7 +75,7 @@ class S15Net4(Net):
     out = F.relu(self.bn1(self.conv1(out)))
     out = F.relu(self.bn2(self.conv2(out)))
     out = self.conv3(out)
-    outshape = out.size()
+    
 
     # we can do away with this and use sigmoid
     # but its better to use softmax with cross entropy in case of depth
@@ -87,6 +87,7 @@ class S15Net4(Net):
     # apply softmax on depth
 
     mask = out[:, :1, :, :]
+    outshape = mask.size()
     # do minmax scaling for mask
     mask = mask.view(outshape[0], outshape[1], -1) 
     mask = mask - mask.min(2, keepdim=True)[0]
