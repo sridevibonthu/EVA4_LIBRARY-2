@@ -119,7 +119,7 @@ class FGBGDataset(Dataset):
         # get edge images for mask and depth for sharpness
 
         data = {"image": image, "mask": mask, "depth": depth}
-        augmented = image_transform(**data)
+        augmented = self.image_transform(**data)
         image, mask, depth = augmented["image"], augmented["mask"], augmented["depth"]
 
         return image, torch.stack([mask, depth])
