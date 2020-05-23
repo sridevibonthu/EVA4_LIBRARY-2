@@ -7,7 +7,6 @@ from torch.utils.data import Dataset
 import random
 import re
 
-
 def validatePath(path):
     if not os.path.exists(path):
         raise ValueError(f"{path} is not a valild path")
@@ -77,17 +76,19 @@ def combine_classes(labels, onehotclasses, device):
 
   return v
 
+    
 class FGBGDataset(Dataset):
     """Tine Imagenet dataset reader."""
 
-    def __init__(self, data, image_transform=None, mask_transform=None, depth_transform=None):
+    def __init__(self, data, common_transforms, means, stdevs, specific_transforms = None):
         """
         Args:
             data (string): zipped images and labels.
         """
-        self.image_transform = image_transform
-        self.mask_transform = mask_transform
-        self.depth_transform = depth_transform
+        self.common_transforms = A.Compose(common_transforms, additional_targets = {'image': 'image', 'mask': 'image', 'depth':'image'})
+        self.specific_transforms = A.Compose(specific_transforms) if specific_transforms else None
+        self.means = np.array(means)
+        self.stdevs = np.array(stdevs)
         self.images, self.masks, self.depths = zip(*data)
 
     def __len__(self):
@@ -99,31 +100,24 @@ class FGBGDataset(Dataset):
 
         image = io.imread(self.images[idx], as_gray=False, pilmode="RGB")
         # for grayscale images tensor will need to transpose it.
-        mask = io.imread(self.masks[idx], as_gray=True, pilmode="1").T 
-        depth = io.imread(self.depths[idx], as_gray=True, pilmode="L").T
+        mask = io.imread(self.masks[idx], as_gray=True, pilmode="1") 
+        depth = io.imread(self.depths[idx], as_gray=True, pilmode="L")
 
-        #maskedge = feature.canny(io.imread(self.masks[idx], as_gray=True, pilmode="1").T)
-        #depthedge = feature.canny(io.imread(self.depths[idx], as_gray=True, pilmode="L").T, sigma = 0.5)
-
-        # if self.image_transform:
-        #     image = self.image_transform(image)
-
-        # if self.mask_transform:
-        #     mask = self.mask_transform(mask)
-        #     #maskedge = self.mask_transform(maskedge)
-
-        # if self.depth_transform:
-        #     depth = self.depth_transform(depth)
-            #depthedge = self.depth_transform(depthedge)
-
-        # get edge images for mask and depth for sharpness
-
-        data = {"image": image, "mask": mask, "depth": depth}
-        augmented = self.image_transform(**data)
-        image, mask, depth = augmented["image"], augmented["mask"], augmented["depth"]
-
-        return image, torch.stack([mask, depth])
-        #return image, torch.stack([mask, depth, maskedge, depthedge])
-        
-
+        if self.common_transforms:
+            augmented = self.common_transforms(image=image, mask=mask, depth=depth)
+            image, mask, depth = augmented["image"], augmented["mask"], augmented["depth"]
             
+        if self.specific_transforms:
+          image = self.specific_transforms(image=image)['image']
+
+        image = image/255.0
+        image = (image - self.means)/self.stdevs
+        image = np.transpose(image, (2, 0, 1))
+        image = torch.from_numpy(image)
+        mask = torch.from_numpy(mask)/255.0
+        depth = torch.from_numpy(depth)/255.0
+
+        # now we need to take 4 images and put them with one another
+        # also we need to shuffle every time
+        # we need to use 
+        return image, torch.stack([mask, depth])
