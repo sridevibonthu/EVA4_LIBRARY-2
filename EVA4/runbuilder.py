@@ -65,13 +65,31 @@ class RunManager():
     self.channel_means = channel_means
     self.channel_stdevs = channel_stdevs
 
-  def sample_outcomes(self, outcomes, suffix='input'):
-    if not self.classification:
-        l = 0
-        for k, v in self.visdecoder.items():
+  def sample_outcome_images(self, outcomes, suffix='input'):
+      l = 0
+      for k, v in self.visdecoder.items():
+          vgrid = torchvision.utils.make_grid(outcomes[:32,l:v,:,:])
+          l = v
+          self.tb.add_image(f'{k}({suffix})', vgrid)
+
+  def sample_outcome_classes(self, outcomes, suffix='input'):
+      l = 0
+      for k, v in self.visdecoder.items():
+          if v-l == 1:
             vgrid = torchvision.utils.make_grid(outcomes[:32,l:v,:,:])
-            l = v
-            self.tb.add_image(f'{k}({suffix})', vgrid)
+          else:
+            # for each pixel, set the value to index of argmax. if max is do nothing
+            # add all zeros tensot at beginning
+            
+            o = outcomes[:32,l:v,:,:]
+            s = o.size()
+            o = torch.cat((o, torch.zeros(s[0], 1, s[2], s[3])))
+            o = (o.argmax(dim=1)+1)%(v-l+1)
+            vgrid = torchvision.utils.make_grid(o)
+            # test by creating random tensor and visualize
+          l = v
+          self.tb.add_image(f'{k}({suffix})', vgrid)
+          
 
   # record the count, hyper-param, model, trainloader of each run
   # record sample images and network graph to TensorBoard  
@@ -100,7 +118,7 @@ class RunManager():
         grid[i] = grid[i] * self.channel_stdevs[i] + self.channel_means[i]
 
     self.tb.add_image('images', grid)
-    self.sample_outcomes(outcomes)
+    self.sample_outcome_images(outcomes)
     
     self.tb.add_graph(self.network, images.to(self.network.device))
 
@@ -143,8 +161,8 @@ class RunManager():
     self.tb.add_scalar('Learning Rate', lr, self.epoch_count)
 
     # output sample images created in test
-    self.sample_outcomes(self.test_output, f'output-{self.epoch_count}')
-    self.sample_outcomes(self.test_input, f'input-{self.epoch_count}')
+    self.sample_outcome_classes(self.test_output, f'output-{self.epoch_count}')
+    self.sample_outcome_images(self.test_input, f'input-{self.epoch_count}')
 
     results = OrderedDict()
     results["run"] = self.run_count
@@ -209,7 +227,10 @@ class RunManager():
 
   @torch.no_grad()
   def _get_num_correct(self, preds, labels):
-    return preds.argmax(dim=1).eq(labels).sum().item()
+    # this is for label encoding. For onehot this must change
+    # we need to find 
+    #return preds.argmax(dim=1).eq(labels).sum().item()
+    return preds.argmax(dim=1).eq(labels.argmax(dim=1)).sum().item()
   
   def savebest(self, fileName):
       f = os.path.join(self.savepath, f'{fileName}.pt')
