@@ -179,9 +179,9 @@ class RunManager():
         results["test accuracy"] = test_accuracy
 
     # Record params to TensorBoard
-    for name, param in self.network.named_parameters():
-      self.tb.add_histogram(name, param, self.epoch_count)
-      self.tb.add_histogram(f'{name}.grad', param.grad, self.epoch_count)
+    #for name, param in self.network.named_parameters():
+    #  self.tb.add_histogram(name, param, self.epoch_count)
+    #  self.tb.add_histogram(f'{name}.grad', param.grad, self.epoch_count)
     
     # Write into 'results' (OrderedDict) for all run related data
     results["epoch duration"] = epoch_duration
