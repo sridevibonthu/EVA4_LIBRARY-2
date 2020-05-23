@@ -1,6 +1,7 @@
 import torch
 import os
 from skimage import io
+from skimage import feature
 import numpy as np
 from torch.utils.data import Dataset
 import random
@@ -101,17 +102,25 @@ class FGBGDataset(Dataset):
         mask = io.imread(self.masks[idx], as_gray=True, pilmode="1").T 
         depth = io.imread(self.depths[idx], as_gray=True, pilmode="L").T
 
+        maskedge = feature.canny(mask)
+        depthedge = feature.canny(depth, sigma = 0.5)
+
         if self.image_transform:
             image = self.image_transform(image)
 
         if self.mask_transform:
             mask = self.mask_transform(mask)
+            maskedge = self.mask_transform(maskedge)
 
         if self.depth_transform:
             depth = self.depth_transform(depth)
+            depthedge = self.mask_transform(depthedge)
+
+        # get edge images for mask and depth for sharpness
 
 
-        return image, torch.stack([mask, depth])
+
+        return image, torch.stack([mask, depth, maskedge, depthedge])
         
 
             
