@@ -103,6 +103,7 @@ class RunManager():
     self.network = network
     self.trainloader = trainloader
     self.testloader = testloader
+    self.batchlrs = []
 
     import socket
     from datetime import datetime
@@ -133,7 +134,7 @@ class RunManager():
 
   def end_batch(self, lr):
       self.batch_count += 1
-      self.tb.add_scalar('Batch Learning Rate', lr, self.batch_count)
+      self.batchlrs.append((lr, self.batch_count))
       batch_duration = time.time() - self.batch_start_time
       return batch_duration
 
@@ -147,6 +148,7 @@ class RunManager():
     self.epoch_test_num_correct = 0
     self.test_output = None
     self.test_input = None
+    self.batchlrs = []
 
   def end_epoch(self, lr):
     # calculate epoch duration and run duration(accumulate)
@@ -159,6 +161,8 @@ class RunManager():
     self.tb.add_scalar('Train Loss', trainloss, self.epoch_count)
     self.tb.add_scalar('Test Loss', testloss, self.epoch_count)
     self.tb.add_scalar('Learning Rate', lr, self.epoch_count)
+    for b in self.batchlrs:
+      self.tb.add_scalar('Batch Learning Rate', b[0], b[1])
 
     # output sample images created in test
     self.sample_outcome_classes(self.test_output, f'output-{self.epoch_count}')
