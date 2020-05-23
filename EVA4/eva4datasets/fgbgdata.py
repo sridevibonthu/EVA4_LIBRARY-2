@@ -105,19 +105,22 @@ class FGBGDataset(Dataset):
         #maskedge = feature.canny(io.imread(self.masks[idx], as_gray=True, pilmode="1").T)
         #depthedge = feature.canny(io.imread(self.depths[idx], as_gray=True, pilmode="L").T, sigma = 0.5)
 
-        if self.image_transform:
-            image = self.image_transform(image)
+        # if self.image_transform:
+        #     image = self.image_transform(image)
 
-        if self.mask_transform:
-            mask = self.mask_transform(mask)
-            #maskedge = self.mask_transform(maskedge)
+        # if self.mask_transform:
+        #     mask = self.mask_transform(mask)
+        #     #maskedge = self.mask_transform(maskedge)
 
-        if self.depth_transform:
-            depth = self.depth_transform(depth)
+        # if self.depth_transform:
+        #     depth = self.depth_transform(depth)
             #depthedge = self.depth_transform(depthedge)
 
         # get edge images for mask and depth for sharpness
 
+        data = {"image": image, "mask": mask, "depth": depth}
+        augmented = image_transform(**data)
+        image, mask, depth = augmented["image"], augmented["mask"], augmented["depth"]
 
         return image, torch.stack([mask, depth])
         #return image, torch.stack([mask, depth, maskedge, depthedge])
