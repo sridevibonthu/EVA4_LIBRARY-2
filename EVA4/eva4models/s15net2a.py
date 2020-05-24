@@ -96,17 +96,17 @@ class S15Net2a(Net):
     self.prepLayer = InitialBlock(planes)  # 64 channels
     self.encoder1 = Encoder(planes*4, planes*4, 2)   # RF = 24
     self.encoder2 = Encoder(planes*4, planes*8, 2)   # RF = 48
-    self.encoder3 = Encoder(planes*8, planes*16, 2)   # RF = 80
+    self.encoder3 = Encoder(planes*8, planes*12, 2)   # RF = 80
     
-    self.decoder1 = Decoder(planes*16)   # RF = 24
-    self.decoder2 = Decoder(planes*16)   # RF = 48
+    self.decoder1 = Decoder(planes*12)   # RF = 24
+    self.decoder2 = Decoder(planes*12)   # RF = 48
     
-    dplanes = planes*4  + planes * 8
+    dplanes = planes*4  + planes * 6
     self.decoder3 = Decoder(dplanes)   # RF = 80
     planes = dplanes // 2 + planes * 4
 
-    self.conv1 = nn.Conv2d(planes, planes, kernel_size=3, padding=1, stride=1, bias=False)
-    self.bn1 = nn.BatchNorm2d(planes)
+    #self.conv1 = nn.Conv2d(planes, planes, kernel_size=3, padding=1, stride=1, bias=False)
+    #self.bn1 = nn.BatchNorm2d(planes)
 
     self.conv2 = nn.Conv2d(planes, outchannels, kernel_size=3, padding=1, stride=1, bias=False)
    
@@ -122,8 +122,8 @@ class S15Net2a(Net):
     d3 = torch.cat((x, self.decoder3(d2)), 1) # 80 channels 160x160
   
   
-    out = F.relu(self.bn1(self.conv1(d3)))
-    out = self.conv2(out)
+    #out = F.relu(self.bn1(self.conv1(d3)))
+    out = self.conv2(d3)
     outshape = out.size()
     
     # min max scaling
