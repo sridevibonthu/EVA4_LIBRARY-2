@@ -75,12 +75,12 @@ class S15Net2a(Net):
     out = F.relu(self.bn1(self.conv1(out)))
     out = F.relu(self.bn2(self.conv2(out)))
     out = self.conv3(out)
-    outshape = out.size()
-    out = torch.sigmoid(out)
+    #outshape = out.size()
+    #out = torch.sigmoid(out)
     # min max scaling
-    y = out.view(outshape[0], outshape[1], -1) 
-    y = y - y.min(2, keepdim=True)[0]
-    y = y/(y.max(2, keepdim=True)[0] )
-    y = y.view(outshape)
+    #y = out.view(outshape[0], outshape[1], -1) 
+    #y = y - y.min(2, keepdim=True)[0]
+    #y = y/(y.max(2, keepdim=True)[0] )
+    #y = y.view(outshape)
     #mask = mask.float() # cast back to float sicne x is a ByteTensor now
-    return y
+    return out
