@@ -3,23 +3,40 @@ import torch.nn as nn
 import torch.nn.functional as F
 from eva4net import Net
 
-class ResBlock(nn.Module):
-    def __init__(self, inplanes, planes, dilation):
-        super(ResBlock, self).__init__()
-        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, padding=0, stride=1, bias=False)
+class Encoder(nn.Module):
+    def __init__(self, planes, dilation):
+        super(Encoder, self).__init__()
+        self.conv1 = nn.Conv2d(planes, planes, kernel_size=3, padding=dilation, stride=1, dilation=dilation, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
-        self.conv2 = nn.Conv2d(planes, planes*2, kernel_size=3, padding=dilation, stride=1, dilation=dilation, bias=False)
-        self.bn2 = nn.BatchNorm2d(planes*2)
-        self.conv3 = nn.Conv2d(planes*2, planes*4, kernel_size=3, padding=dilation, stride=1, dilation=dilation, bias=False)
-        self.bn3 = nn.BatchNorm2d(planes*4)
+        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=dilation, stride=2, dilation=dilation, bias=False)
+        self.bn2 = nn.BatchNorm2d(planes)
+        self.xconv = nn.Conv2d(planes, planes, kernel_size=1, padding=1, stride=2, bias=False)
+        self.bn = nn.BatchNorm2d(planes)
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
-        out = F.relu(self.bn2(self.conv2(out)))
-        out = self.bn3(self.conv3(out))
+        out = self.bn2(self.conv2(out))
+        x = self.bn(self.xconv(x))
         out = x + out
         out = F.relu(out)
         return out
+
+class Decoder(nn.Module):
+    def __init__(self, planes):
+        super(Decoder, self).__init__()
+        #self.upsample = nn.ConvTranspose2d(planes*4, planes*4, kernel_size=3, stride=2, padding=1)
+        # At this point we will use Pixel Shuffle to make resolution 224x224 
+        planes = planes//4 #due to pixel shuffle
+        self.conv1 = nn.Conv2d(planes, planes, kernel_size=3, padding=1, stride=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(planes)
+        self.conv2 = nn.Conv2d(planes, planes*2, kernel_size=3, padding=1, stride=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(planes*2)
+
+    def forward(self, x):
+        out = F.pixel_shuffle(x, 2) # 32 channels
+        out = F.relu(self.bn1(self.conv1(out))) # 64 channels
+        out = F.relu(self.bn2(self.conv2(out))) # 128 channels
+        
 
 class InitialBlock(nn.Module):
     def __init__(self, planes):
@@ -28,59 +45,59 @@ class InitialBlock(nn.Module):
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes*2, kernel_size=3, padding=1, stride=1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes*2)
-        self.conv3 = nn.Conv2d(planes*2, planes*4, kernel_size=3, padding=1, stride=2, bias=False)
-        self.bn3 = nn.BatchNorm2d(planes*4)
+        #self.conv3 = nn.Conv2d(planes*2, planes*4, kernel_size=3, padding=1, stride=1, bias=False)
+        #self.bn3 = nn.BatchNorm2d(planes*4)
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
         out = F.relu(self.bn2(self.conv2(out)))
-        out = F.relu(self.bn3(self.conv3(out)))
+        #out = F.relu(self.bn3(self.conv3(out)))
         return  out
 
 #implementation of the new resnet model
 class S15Net2a(Net):
-  def __init__(self,name="S15Net2a", outchannels=2, planes=32):
+  def __init__(self,name="S15Net2a", outchannels=2, planes=16):
     super(S15Net2a,self).__init__(name)
-    self.prepLayer = InitialBlock(planes)               # IN: 160x160x3, OUT 80x80x128, JUMP = 2, RF = 7
-    self.layer1 = ResBlock(planes*4, planes, 2)   # RF = 24
-    self.layer2 = ResBlock(planes*4, planes, 3)   # RF = 48
-    self.layer3 = ResBlock(planes*4, planes, 4)   # RF = 80
-    #self.layer4 = ResBlock(planes*4, planes, 16)  # RF = 248
+    self.prepLayer = InitialBlock(planes)  # IN: 160x160x3, OUT 80x80x128, JUMP = 2, RF = 7
+    planes *= 2
+    self.encoder1 = Encoder(planes, 2)   # RF = 24
+    planes *= 2
+    self.encoder2 = Encoder(planes, 2)   # RF = 48
+    planes *= 2
+    self.encoder3 = Encoder(planes, 2)   # RF = 80
+    
+    self.decoder1 = Decoder(planes)   # RF = 24
+    self.decoder2 = Decoder(planes)   # RF = 48
+    
+    planes = planes // 4 + planes // 2
+    
+    self.decoder3 = Decoder(planes)   # RF = 80
+    planes = planes // 4 + planes // 2
 
-    self.upsample = self.create_conv2d(planes*4, planes*16, kernel_size=(1,1), padding=0) # IN 80x80x128, OUT 80x80x512, RF = 120 
-    #self.upsample = nn.ConvTranspose2d(planes*4, planes*4, kernel_size=3, stride=2, padding=1)
-    # At this point we will use Pixel Shuffle to make resolution 224x224 
-    self.conv1 = nn.Conv2d(planes*4, planes*4, kernel_size=3, padding=1, stride=1, bias=False)
-    self.bn1 = nn.BatchNorm2d(planes*4)
-    self.conv2 = nn.Conv2d(planes*4, planes*8, kernel_size=3, padding=1, stride=1, bias=False)
-    self.bn2 = nn.BatchNorm2d(planes*8)
+    self.conv1 = nn.Conv2d(planes, planes, kernel_size=3, padding=1, stride=1, bias=False)
+    self.bn1 = nn.BatchNorm2d(planes)
 
-    # we will quantize depth in 16 classes.
-    self.conv3 = nn.Conv2d(planes*8, outchannels, kernel_size=1, padding=0, stride=1, bias=False)
+    self.conv2 = nn.Conv2d(planes, outchannels, kernel_size=3, padding=1, stride=1, bias=False)
    
   def forward(self,x):
     data_shape = x.size()
-    x = self.prepLayer(x)
-    x = self.layer1(x)
-    x = self.layer2(x)
-    x = self.layer3(x)
-    #x = self.layer4(x)
-  
-    #out = self.upsample(x, output_size=data_shape)
-    out = self.upsample(x)
-    out = F.pixel_shuffle(out, 2)
-    # rather than probabilities we are making it a hard mask prediction
-    # this is not it, we can restore binary logic later
+    x = self.prepLayer(x) # 32 channels 160x160
+    e1 = self.encoder1(x) # 32 channels 80x80
+    e2 = self.encoder2(e1) # 64 channels 40x40
+    e3 = self.encoder3(e2) # 128 channels 20x20
 
-    out = F.relu(self.bn1(self.conv1(out)))
-    out = F.relu(self.bn2(self.conv2(out)))
-    out = self.conv3(out)
-    #outshape = out.size()
-    #out = torch.sigmoid(out)
+    d1 = torch.cat((e2, self.decoder1(e3)), 1) # 128 channels 40x40
+    d2 = torch.cat((e1, self.decoder1(d1)), 1) # 96 channels 80x80
+    d3 = torch.cat((x, self.decoder1(d2)), 1) # 80 channels 160x160
+  
+  
+    out = F.relu(self.bn1(self.conv1(d3)))
+    out = self.conv2(out)
+    outshape = out.size()
+    
     # min max scaling
-    #y = out.view(outshape[0], outshape[1], -1) 
-    #y = y - y.min(2, keepdim=True)[0]
-    #y = y/(y.max(2, keepdim=True)[0] )
-    #y = y.view(outshape)
-    #mask = mask.float() # cast back to float sicne x is a ByteTensor now
-    return out
+    y = out.view(outshape[0], outshape[1], -1) 
+    y = y - y.min(2, keepdim=True)[0]
+    y = y/(y.max(2, keepdim=True)[0] )
+    y = y.view(outshape)
+    return y
