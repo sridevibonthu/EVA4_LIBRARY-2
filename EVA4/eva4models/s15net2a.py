@@ -36,6 +36,7 @@ class Decoder(nn.Module):
         out = F.pixel_shuffle(x, 2) # 32 channels
         out = F.relu(self.bn1(self.conv1(out))) # 64 channels
         out = F.relu(self.bn2(self.conv2(out))) # 128 channels
+        return out
         
 
 class InitialBlock(nn.Module):
