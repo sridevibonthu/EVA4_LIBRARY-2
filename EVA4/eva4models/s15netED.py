@@ -216,5 +216,5 @@ class S15NetED(Net):
     mask = self.maskdecoder(e2, e1, e0)
     depth = self.depthdecoder(e3, e2, e1, e0)
     
-    return mask, depth
+    return torch.cat((mask, depth), 1)
     
