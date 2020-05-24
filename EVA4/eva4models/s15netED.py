@@ -204,7 +204,7 @@ class DepthDecoder(nn.Module):
 
 class Decoder(nn.Module):
   def __init__(self, planes):
-    super(DepthDecoder,self).__init__()
+    super(Decoder,self).__init__()
     self.decoder1 = DecoderBlock(planes)   # 512 INPUT  AND 128 OUTPUT
     self.decoder2 = DecoderBlock(planes//2)  # 256 Input 64 output
     self.decoder3 = DecoderBlock(planes//4)  # 128 Input 32 output
