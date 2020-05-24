@@ -86,7 +86,7 @@ class FGBGDataset(Dataset):
         Args:
             data (string): zipped images and labels.
         """
-        self.common_transforms = A.Compose(common_transforms, additional_targets = {'image': 'image', 'mask': 'image', 'depth':'image'})
+        self.common_transforms = A.Compose(common_transforms, additional_targets = {'image': 'image', 'mask': 'image', 'depth':'image'}) if common_transforms else None
         self.specific_transforms = A.Compose(specific_transforms) if specific_transforms else None
         self.means = np.array(means)
         self.stdevs = np.array(stdevs)
