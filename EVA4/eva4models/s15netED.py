@@ -208,7 +208,7 @@ class S15NetED(Net):
     self.prepLayer = InitialBlock(planes)  # 64 channels
     self.encoder = Encoder(planes*4)  # 512 channels
     self.maskdecoder = MaskDecoder(planes*16)
-    self.depthdecoder = MaskDecoder(planes*32)
+    self.depthdecoder = DepthDecoder(planes*32)
    
   def forward(self,x):
     data_shape = x.size()
