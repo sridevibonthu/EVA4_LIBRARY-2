@@ -96,12 +96,12 @@ class S15Net2a(Net):
     self.prepLayer = InitialBlock(planes)  # 64 channels
     self.encoder1 = Encoder(planes*4, planes*4, 2)   # RF = 24
     self.encoder2 = Encoder(planes*4, planes*8, 2)   # RF = 48
-    self.encoder3 = Encoder(planes*8, planes*12, 2)   # RF = 80
+    self.encoder3 = Encoder(planes*8, planes*16, 2)   # RF = 80
     
-    self.decoder1 = Decoder(planes*12)   # RF = 24
-    self.decoder2 = Decoder(planes*12)   # RF = 48
+    self.decoder1 = Decoder(planes*16)   # RF = 24
+    self.decoder2 = Decoder(planes*16)   # RF = 48
     
-    dplanes = planes*4  + planes * 6
+    dplanes = planes*4  + planes * 8
     self.decoder3 = Decoder(dplanes)   # RF = 80
     planes = dplanes // 2 + planes * 4
 
