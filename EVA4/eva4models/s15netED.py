@@ -77,6 +77,7 @@ class DecoderBlock(nn.Module):
         #self.upsample = nn.ConvTranspose2d(planes*4, planes*4, kernel_size=3, stride=2, padding=1)
         # At this point we will use Pixel Shuffle to make resolution 224x224 
         planes = planes//4 #due to pixel shuffle
+        # it may be useful to shuffle before adding groups?
         self.conv1 = nn.Conv2d(planes, planes, kernel_size=3, padding=1, stride=1, bias=False, groups = 4)
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=1, stride=1, bias=False, groups = 4)
