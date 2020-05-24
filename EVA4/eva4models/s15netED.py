@@ -120,10 +120,10 @@ class MaskDecoder(nn.Module):
     self.decoder1 = DecoderBlock(planes)   # 256 INPUT  AND 64 OUTPUT
     self.decoder2 = DecoderBlock(planes//2)  # 128 Input 32 output
     #e1 has 128 output
-    self.e1conv = nn.Conv2d(planes//2, planes//4, kernel_size=3, padding=1, stride=1, bias=False)
+    self.e1conv = nn.Conv2d(planes//2, planes//4, kernel_size=1, padding=0, stride=1, bias=False)
     self.e1bn = nn.BatchNorm2d(planes//4) # 64 channels
     #e0 has 64 output
-    self.e0conv = nn.Conv2d(planes//4, planes//8, kernel_size=3, padding=1, stride=1, bias=False)
+    self.e0conv = nn.Conv2d(planes//4, planes//8, kernel_size=1, padding=0, stride=1, bias=False)
     self.e0bn = nn.BatchNorm2d(planes//8) # 32 channels
 
     self.conv1 = nn.Conv2d(planes//4, planes//8, kernel_size=3, padding=1, stride=1, bias=False)
@@ -160,13 +160,13 @@ class DepthDecoder(nn.Module):
     self.decoder2 = DecoderBlock(planes//2)  # 256 Input 64 output
     self.decoder3 = DecoderBlock(planes//4)  # 128 Input 32 output
     # e2 has 256 outputs
-    self.e2conv = nn.Conv2d(planes//2, planes//4, kernel_size=3, padding=1, stride=1, bias=False)
+    self.e2conv = nn.Conv2d(planes//2, planes//4, kernel_size=1, padding=0, stride=1, bias=False)
     self.e2bn = nn.BatchNorm2d(planes//4) # 64 channels
     #e1 has 128 outputs
-    self.e1conv = nn.Conv2d(planes//4, planes//8, kernel_size=3, padding=1, stride=1, bias=False)
+    self.e1conv = nn.Conv2d(planes//4, planes//8, kernel_size=1, padding=0, stride=1, bias=False)
     self.e1bn = nn.BatchNorm2d(planes//8) # 64 channels
     # e0 has 64 outputs
-    self.e0conv = nn.Conv2d(planes//8, planes//16, kernel_size=3, padding=1, stride=1, bias=False)
+    self.e0conv = nn.Conv2d(planes//8, planes//16, kernel_size=1, padding=0, stride=1, bias=False)
     self.e0bn = nn.BatchNorm2d(planes//16) # 32 channels
 
     self.conv1 = nn.Conv2d(planes//8, planes//8, kernel_size=3, padding=1, stride=1, bias=False)
