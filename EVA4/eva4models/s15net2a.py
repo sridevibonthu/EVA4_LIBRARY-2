@@ -10,7 +10,7 @@ class Encoder(nn.Module):
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=dilation, stride=2, dilation=dilation, bias=False)
         self.bn2 = nn.BatchNorm2d(planes)
-        self.xconv = nn.Conv2d(planes, planes, kernel_size=1, padding=1, stride=2, bias=False)
+        self.xconv = nn.Conv2d(planes, planes, kernel_size=1, padding=0, stride=2, bias=False)
         self.bn = nn.BatchNorm2d(planes)
 
     def forward(self, x):
