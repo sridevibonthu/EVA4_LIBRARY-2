@@ -83,8 +83,8 @@ class S15Net2a(Net):
     e3 = self.encoder3(e2) # 128 channels 20x20
 
     d1 = torch.cat((e2, self.decoder1(e3)), 1) # 128 channels 40x40
-    d2 = torch.cat((e1, self.decoder1(d1)), 1) # 96 channels 80x80
-    d3 = torch.cat((x, self.decoder1(d2)), 1) # 80 channels 160x160
+    d2 = torch.cat((e1, self.decoder2(d1)), 1) # 96 channels 80x80
+    d3 = torch.cat((x, self.decoder3(d2)), 1) # 80 channels 160x160
   
   
     out = F.relu(self.bn1(self.conv1(d3)))
