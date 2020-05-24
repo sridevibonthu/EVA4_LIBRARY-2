@@ -40,7 +40,7 @@ class Encoder(nn.Module):
     def __init__(self, inplanes, outplanes, dilation):
         super(Encoder, self).__init__()
         self.direct = nn.Conv2d(inplanes, outplanes//4, kernel_size=1, padding=0, stride=2, bias=False)
-        self.directbn = nn.BatchNorm2d(outplanes)
+        self.directbn = nn.BatchNorm2d(outplanes//4)
         # if we need to reduce we can do groupwise here with shuffle, worth a try
         self.path1 = EncoderPath(inplanes, outplanes//4, 1)
         self.path2 = EncoderPath(inplanes, outplanes//4, 2)
