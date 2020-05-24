@@ -4,14 +4,14 @@ import torch.nn.functional as F
 from eva4net import Net
 
 class Encoder(nn.Module):
-    def __init__(self, planes, dilation):
+    def __init__(self, inplanes, outplanes, dilation):
         super(Encoder, self).__init__()
-        self.conv1 = nn.Conv2d(planes, planes, kernel_size=3, padding=dilation, stride=1, dilation=dilation, bias=False)
-        self.bn1 = nn.BatchNorm2d(planes)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=dilation, stride=2, dilation=dilation, bias=False)
-        self.bn2 = nn.BatchNorm2d(planes)
-        self.xconv = nn.Conv2d(planes, planes, kernel_size=1, padding=0, stride=2, bias=False)
-        self.bn = nn.BatchNorm2d(planes)
+        self.conv1 = nn.Conv2d(inplanes, outplanes, kernel_size=3, padding=dilation, stride=1, dilation=dilation, bias=False)
+        self.bn1 = nn.BatchNorm2d(outplanes)
+        self.conv2 = nn.Conv2d(outplanes, outplanes, kernel_size=3, padding=dilation, stride=2, dilation=dilation, bias=False)
+        self.bn2 = nn.BatchNorm2d(outplanes)
+        self.xconv = nn.Conv2d(inplanes, outplanes, kernel_size=1, padding=0, stride=2, bias=False)
+        self.bn = nn.BatchNorm2d(outplanes)
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
@@ -59,20 +59,16 @@ class S15Net2a(Net):
   def __init__(self,name="S15Net2a", outchannels=2, planes=16):
     super(S15Net2a,self).__init__(name)
     self.prepLayer = InitialBlock(planes)  # IN: 160x160x3, OUT 80x80x128, JUMP = 2, RF = 7
-    planes *= 2
-    self.encoder1 = Encoder(planes, 2)   # RF = 24
-    planes *= 2
-    self.encoder2 = Encoder(planes, 2)   # RF = 48
-    planes *= 2
-    self.encoder3 = Encoder(planes, 2)   # RF = 80
+    self.encoder1 = Encoder(planes*2, planes*2, 2)   # RF = 24
+    self.encoder2 = Encoder(planes*2, planes*4, 2)   # RF = 48
+    self.encoder3 = Encoder(planes*4, planes*8, 2)   # RF = 80
     
-    self.decoder1 = Decoder(planes)   # RF = 24
-    self.decoder2 = Decoder(planes)   # RF = 48
+    self.decoder1 = Decoder(planes*8)   # RF = 24
+    self.decoder2 = Decoder(planes*8)   # RF = 48
     
-    planes = planes // 4 + planes // 2
-    
-    self.decoder3 = Decoder(planes)   # RF = 80
-    planes = planes // 4 + planes // 2
+    dplanes = planes*2  + planes * 4
+    self.decoder3 = Decoder(dplanes)   # RF = 80
+    planes = dplanes // 2 + planes * 2
 
     self.conv1 = nn.Conv2d(planes, planes, kernel_size=3, padding=1, stride=1, bias=False)
     self.bn1 = nn.BatchNorm2d(planes)
