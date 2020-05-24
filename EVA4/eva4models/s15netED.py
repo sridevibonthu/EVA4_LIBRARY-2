@@ -53,7 +53,7 @@ class EncoderPath(nn.Module):
 
 
 class EncoderBlock(nn.Module):
-    def __init__(self, inplanes, outplanes, dilation):
+    def __init__(self, inplanes, outplanes):
         super(EncoderBlock, self).__init__()
         self.direct = nn.Conv2d(inplanes, outplanes//4, kernel_size=1, padding=0, stride=2, bias=False)
         self.directbn = nn.BatchNorm2d(outplanes//4)
@@ -91,9 +91,9 @@ class DecoderBlock(nn.Module):
 class Encoder(nn.Module):
   def __init__(self, planes):
     super(Encoder,self).__init__()
-    self.encoder1 = EncoderBlock(planes, planes*2, 2)   # 128 channels# RF = 24
-    self.encoder2 = EncoderBlock(planes*2, planes*4, 2)  # 256 channels
-    self.encoder3 = EncoderBlock(planes*4, planes*8, 2)  # 512 channels
+    self.encoder1 = EncoderBlock(planes, planes*2)   # 128 channels# RF = 24
+    self.encoder2 = EncoderBlock(planes*2, planes*4)  # 256 channels
+    self.encoder3 = EncoderBlock(planes*4, planes*8)  # 512 channels
    
   def forward(self,x):
     e1 = self.encoder1(x) # 32 channels 80x80
@@ -183,7 +183,7 @@ class DepthDecoder(nn.Module):
 
     x, e2, e1, e0 = inputs
     depth = self.decoder1(x) # 32 channels 80x80
-    e2 = self.e2bn(self.e1conv(e2))
+    e2 = self.e2bn(self.e2conv(e2))
     depth = F.relu(torch.cat((depth, e2), 1))
 
     depth = self.decoder2(x) # 32 channels 80x80
