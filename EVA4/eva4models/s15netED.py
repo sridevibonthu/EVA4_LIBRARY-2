@@ -136,8 +136,8 @@ class MaskDecoder(nn.Module):
     self.minmaxscaler = MinMaxScaler()
 
    
-  def forward(self, x, y):
-    e1, e0 = y
+  def forward(self, *inputs):
+    x, e1, e0 = inputs
     mask = self.decoder1(x) # 32 channels 80x80
     e1 = self.e1bn(self.e1conv(e1))
     mask = F.relu(torch.cat((mask, e1), 1))
@@ -179,9 +179,9 @@ class DepthDecoder(nn.Module):
     self.minmaxscaler = MinMaxScaler()
 
    
-  def forward(self, x, y):
+  def forward(self, *inputs):
 
-    e2, e1, e0 = y
+    x, e2, e1, e0 = inputs
     depth = self.decoder1(x) # 32 channels 80x80
     e2 = self.e2bn(self.e1conv(e2))
     depth = F.relu(torch.cat((depth, e2), 1))
@@ -215,8 +215,8 @@ class S15NetED(Net):
     e0 = self.prepLayer(x) # 32 channels 160x160
     e1, e2, e3 = self.encoder(e0) # 32 channels 80x80
 
-    mask = self.maskdecoder(e2, (e1, e0))
-    depth = self.depthdecoder(e3, (e2, e1, e0))
+    mask = self.maskdecoder(e2, e1, e0)
+    depth = self.depthdecoder(e3, e2, e1, e0)
     
     return torch.cat((mask, depth), 1)
     
