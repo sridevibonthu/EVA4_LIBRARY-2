@@ -24,7 +24,7 @@ from eva4net import Net
 
 class EncoderPath(nn.Module):
   def __init__(self, inplanes, outplanes, dilation):
-      super(Encoder, self).__init__()
+      super(EncoderPath, self).__init__()
       self.conv1 = nn.Conv2d(inplanes, outplanes, kernel_size=3, padding=dilation, stride=2, dilation=dilation, bias=False)
       self.bn1 = nn.BatchNorm2d(outplanes)
       self.conv2 = nn.Conv2d(outplanes, outplanes, kernel_size=3, padding=dilation, stride=1, dilation=dilation, bias=False)
