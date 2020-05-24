@@ -186,7 +186,7 @@ class DepthDecoder(nn.Module):
     e2 = self.e2bn(self.e2conv(e2))
     depth = F.relu(torch.cat((depth, e2), 1))
 
-    depth = self.decoder2(x) # 32 channels 80x80
+    depth = self.decoder2(depth) # 32 channels 80x80
     e1 = self.e1bn(self.e1conv(e1))
     depth = F.relu(torch.cat((depth, e1), 1))
     
