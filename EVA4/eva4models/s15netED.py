@@ -215,8 +215,8 @@ class S15NetED(Net):
     e0 = self.prepLayer(x) # 32 channels 160x160
     e1, e2, e3 = self.encoder(e0) # 32 channels 80x80
 
-    mask = self.maskdecoder(e2, e1, e0)
-    depth = self.depthdecoder(e3, e2, e1, e0)
+    mask = self.maskdecoder((e2, e1, e0))
+    depth = self.depthdecoder((e3, e2, e1, e0))
     
     return torch.cat((mask, depth), 1)
     
