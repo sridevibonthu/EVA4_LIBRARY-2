@@ -201,7 +201,7 @@ class DepthDecoder(nn.Module):
 
 #implementation of the new resnet model
 class S15NetED(Net):
-  def __init__(self,name="S15NetEncoderDecoder", outchannels=2, planes=16):
+  def __init__(self,name="S15NetEncoderDecoder", planes=16):
     super(S15NetED,self).__init__(name)
     self.prepLayer = InitialBlock(planes)  # 64 channels
     self.encoder = Encoder(planes*4)  # 512 channels
