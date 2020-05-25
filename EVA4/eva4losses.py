@@ -5,17 +5,20 @@ import numpy as np
 import torch.nn as nn
 
 class CustomLoss(nn.Module):
-    def __init__(self, maskloss, depthloss):
+    def __init__(self, maskloss, depthloss, factor=20):
         super(CustomLoss, self).__init__()
         self.maskloss = maskloss
         self.depthloss = depthloss
+        self.factor = factor
 
     def forward(self, input, target):
         maskloss = self.maskloss(input[:,:1,:,:], target[:,:1,:,:])
         depthloss = self.depthloss(input[:,1:,:,:], target[:,1:,:,:])
         a = max(0.001, maskloss.data)
+        # added this after 10 epochs of training only for finalmodel
+        # havent tested how it will perfomr earlyon!!!
         f = depthloss.data/a
-        f = torch.clamp(f, 1, 20)
+        f = torch.clamp(f, 1, self.factor)
         return f*maskloss + depthloss
 
 class MixedLoss(nn.Module):
