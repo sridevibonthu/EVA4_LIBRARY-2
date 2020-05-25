@@ -204,7 +204,7 @@ class RunManager():
   # accumulate loss of batch into entire epoch loss
   def track_train_loss(self, loss):
     # multiply batch size so variety of batch sizes can be compared
-    self.batchlrs.append((loss.item(), self.batch_count+1))
+    self.batchloss.append((loss.item(), self.batch_count+1))
     self.epoch_train_loss += loss.item() * self.trainloader.batch_size
 
   def track_test_loss(self, loss):

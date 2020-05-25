@@ -3,25 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from eva4net import Net
 
-# class Encoder(nn.Module):
-#     def __init__(self, inplanes, outplanes, dilation):
-#         super(Encoder, self).__init__()
-#         self.conv1 = nn.Conv2d(inplanes, outplanes, kernel_size=3, padding=dilation, stride=2, dilation=dilation, bias=False)
-#         self.bn1 = nn.BatchNorm2d(outplanes)
-#         self.conv2 = nn.Conv2d(outplanes, outplanes, kernel_size=3, padding=dilation, stride=1, dilation=dilation, bias=False)
-#         self.bn2 = nn.BatchNorm2d(outplanes)
-#         self.xconv = nn.Conv2d(inplanes, outplanes, kernel_size=1, padding=0, stride=2, bias=False)
-#         self.bn = nn.BatchNorm2d(outplanes)
-
-#     def forward(self, x):
-#         out = F.relu(self.bn1(self.conv1(x))) # RF += j
-#         out = self.bn2(self.conv2(out))
-#         x = self.bn(self.xconv(x))
-#         out = x + out
-#         out = F.relu(out)
-#         return out
-
-
 class InitialBlock(nn.Module):
     def __init__(self, planes):
         super(InitialBlock, self).__init__()
@@ -29,13 +10,13 @@ class InitialBlock(nn.Module):
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes*2, kernel_size=3, padding=1, stride=1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes*2)
-        self.conv3 = nn.Conv2d(planes*2, planes*4, kernel_size=3, padding=1, stride=1, bias=False)
-        self.bn3 = nn.BatchNorm2d(planes*4)
+        # self.conv3 = nn.Conv2d(planes*2, planes*4, kernel_size=3, padding=1, stride=1, bias=False)
+        # self.bn3 = nn.BatchNorm2d(planes*4)
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
         out = F.relu(self.bn2(self.conv2(out)))
-        out = F.relu(self.bn3(self.conv3(out)))
+        #out = F.relu(self.bn3(self.conv3(out)))
         return  out
 
 class EncoderPath(nn.Module):
@@ -88,16 +69,18 @@ class DecoderBlock(nn.Module):
 class Encoder(nn.Module):
   def __init__(self, planes):
     super(Encoder,self).__init__()
-    self.encoder1 = EncoderBlock(planes, planes*2)   # 128 channels# RF = 24
-    self.encoder2 = EncoderBlock(planes*2, planes*4)  # 256 channels
-    self.encoder3 = EncoderBlock(planes*4, planes*8)  # 512 channels
+    self.encoder1 = EncoderBlock(planes, planes*2)   # 64 channels
+    self.encoder2 = EncoderBlock(planes*2, planes*4)  # 128 channels
+    self.encoder3 = EncoderBlock(planes*4, planes*8)  # 256 channels
+    self.encoder4 = EncoderBlock(planes*8, planes*16)  # 512 channels
    
   def forward(self,x):
-    e1 = self.encoder1(x) # 32 channels 80x80
-    e2 = self.encoder2(e1) # 64 channels 40x40
-    e3 = self.encoder3(e2) # 128 channels 20x20
+    e1 = self.encoder1(x) # 64 channels 80x80
+    e2 = self.encoder2(e1) # 128 channels 40x40
+    e3 = self.encoder3(e2) # 256 channels 20x20
+    e4 = self.encoder3(e3) # 512 channels 10x10
 
-    return e1, e2, e3
+    return e1, e2, e3, e4
 
 class MinMaxScaler(nn.Module):
   def __init(self):
@@ -111,108 +94,24 @@ class MinMaxScaler(nn.Module):
     y = y.view(s)
     return y
 
-class MaskDecoder(nn.Module):
-  def __init__(self, planes):
-    super(MaskDecoder,self).__init__()
-    self.decoder1 = DecoderBlock(planes)   # 256 INPUT  AND 64 OUTPUT
-    self.decoder2 = DecoderBlock(planes//2)  # 128 Input 32 output
-    #e1 has 128 output
-    self.e1conv = nn.Conv2d(planes//2, planes//4, kernel_size=1, padding=0, stride=1, bias=False)
-    self.e1bn = nn.BatchNorm2d(planes//4) # 64 channels
-    #e0 has 64 output
-    self.e0conv = nn.Conv2d(planes//4, planes//8, kernel_size=1, padding=0, stride=1, bias=False)
-    self.e0bn = nn.BatchNorm2d(planes//8) # 32 channels
-
-    self.conv1 = nn.Conv2d(planes//4, planes//8, kernel_size=3, padding=1, stride=1, bias=False)
-    self.bn1 = nn.BatchNorm2d(planes//8)
-    
-    self.conv2 = nn.Conv2d(planes//8, planes//8, kernel_size=3, padding=1, stride=1, bias=False)
-    self.bn2 = nn.BatchNorm2d(planes//8)
-
-    self.conv3 = nn.Conv2d(planes//8, 1, kernel_size=1, stride=1, bias=False)
-    self.minmaxscaler = MinMaxScaler()
-
-   
-  def forward(self, *inputs):
-    x, e1, e0 = inputs
-    mask = self.decoder1(x) # 32 channels 80x80
-    e1 = self.e1bn(self.e1conv(e1))
-    mask = F.relu(torch.cat((mask, e1), 1))
-    
-    mask = self.decoder2(mask) # 64 channels 40x40
-    e0 = self.e0bn(self.e0conv(e0))
-    mask = F.relu(torch.cat((mask, e0), 1))
-    
-    mask = F.relu(self.bn1(self.conv1(mask)))
-    mask = F.relu(self.bn2(self.conv2(mask)))
-    
-    mask = self.conv3(mask)
-    # TODO: min-max scaling
-    return self.minmaxscaler(mask)
-
-class DepthDecoder(nn.Module):
-  def __init__(self, planes):
-    super(DepthDecoder,self).__init__()
-    self.decoder1 = DecoderBlock(planes)   # 512 INPUT  AND 128 OUTPUT
-    self.decoder2 = DecoderBlock(planes//2)  # 256 Input 64 output
-    self.decoder3 = DecoderBlock(planes//4)  # 128 Input 32 output
-    # e2 has 256 outputs
-    self.e2conv = nn.Conv2d(planes//2, planes//4, kernel_size=1, padding=0, stride=1, bias=False)
-    self.e2bn = nn.BatchNorm2d(planes//4) # 64 channels
-    #e1 has 128 outputs
-    self.e1conv = nn.Conv2d(planes//4, planes//8, kernel_size=1, padding=0, stride=1, bias=False)
-    self.e1bn = nn.BatchNorm2d(planes//8) # 64 channels
-    # e0 has 64 outputs
-    self.e0conv = nn.Conv2d(planes//8, planes//16, kernel_size=1, padding=0, stride=1, bias=False)
-    self.e0bn = nn.BatchNorm2d(planes//16) # 32 channels
-
-    self.conv1 = nn.Conv2d(planes//8, planes//8, kernel_size=3, padding=1, stride=1, bias=False)
-    self.bn1 = nn.BatchNorm2d(planes//8)
-    
-    self.conv2 = nn.Conv2d(planes//8, planes//8, kernel_size=3, padding=1, stride=1, bias=False)
-    self.bn2 = nn.BatchNorm2d(planes//8)
-
-    self.conv3 = nn.Conv2d(planes//8, 1, kernel_size=1, stride=1, bias=False)
-    self.minmaxscaler = MinMaxScaler()
-
-   
-  def forward(self, *inputs):
-
-    x, e2, e1, e0 = inputs
-    depth = self.decoder1(x) # 32 channels 80x80
-    e2 = self.e2bn(self.e2conv(e2))
-    depth = F.relu(torch.cat((depth, e2), 1))
-
-    depth = self.decoder2(depth) # 32 channels 80x80
-    e1 = self.e1bn(self.e1conv(e1))
-    depth = F.relu(torch.cat((depth, e1), 1))
-    
-    depth = self.decoder3(depth) # 64 channels 40x40
-    e0 = self.e0bn(self.e0conv(e0))
-    depth = F.relu(torch.cat((depth, e0), 1))
-    
-    depth = F.relu(self.bn1(self.conv1(depth)))
-    depth = F.relu(self.bn2(self.conv2(depth)))
-    
-    depth = self.conv3(depth)
-    return self.minmaxscaler(depth)
-
-
 class Decoder(nn.Module):
   def __init__(self, planes):
     super(Decoder,self).__init__()
     self.decoder1 = DecoderBlock(planes)   # 512 INPUT  AND 128 OUTPUT
     self.decoder2 = DecoderBlock(planes//2)  # 256 Input 64 output
     self.decoder3 = DecoderBlock(planes//4)  # 128 Input 32 output
-    # e2 has 256 outputs
-    self.e2conv = nn.Conv2d(planes//2, planes//4, kernel_size=1, padding=0, stride=1, bias=False)
-    self.e2bn = nn.BatchNorm2d(planes//4) # 64 channels
-    #e1 has 128 outputs
-    self.e1conv = nn.Conv2d(planes//4, planes//8, kernel_size=1, padding=0, stride=1, bias=False)
-    self.e1bn = nn.BatchNorm2d(planes//8) # 64 channels
-    # e0 has 64 outputs
-    self.e0conv = nn.Conv2d(planes//8, planes//16, kernel_size=1, padding=0, stride=1, bias=False)
-    self.e0bn = nn.BatchNorm2d(planes//16) # 32 channels
+    # e3 has 256 outputs
+    self.e3conv = nn.Conv2d(planes//2, planes//4, kernel_size=1, padding=0, stride=1, bias=False)
+    self.e3bn = nn.BatchNorm2d(planes//4) # 64 channels
+    # e2 has 128 outputs
+    self.e2conv = nn.Conv2d(planes//4, planes//8, kernel_size=1, padding=0, stride=1, bias=False)
+    self.e2bn = nn.BatchNorm2d(planes//8) # 64 channels
+    #e1 has 64 outputs
+    self.e1conv = nn.Conv2d(planes//8, planes//16, kernel_size=1, padding=0, stride=1, bias=False)
+    self.e1bn = nn.BatchNorm2d(planes//16) # 64 channels
+    # e0 has 32 outputs
+    self.e0conv = nn.Conv2d(planes//16, planes//32, kernel_size=1, padding=0, stride=1, bias=False)
+    self.e0bn = nn.BatchNorm2d(planes//32) # 32 channels
 
     self.conv1 = nn.Conv2d(planes//8, planes//8, kernel_size=3, padding=1, stride=1, bias=False)
     self.bn1 = nn.BatchNorm2d(planes//8)
@@ -226,24 +125,31 @@ class Decoder(nn.Module):
    
   def forward(self, *inputs):
 
-    x, e2, e1, e0 = inputs
-    depth = self.decoder1(x) # 32 channels 80x80
-    e2 = self.e2bn(self.e2conv(e2))
-    depth = F.relu(depth+e2)
+    x, e3, e2, e1, e0 = inputs
 
-    depth = self.decoder2(depth) # 32 channels 80x80
+    d = self.decoder0(x) # 32 channels 80x80
+    e3 = self.e3bn(self.e3conv(e3))
+    d = F.relu(d+e3)
+    # OR torch.cat((depth, e3), 1) but we need to use shufflenet style shuffles
+
+
+    d = self.decoder1(d) # 32 channels 80x80
+    e2 = self.e2bn(self.e2conv(e2))
+    d = F.relu(d+e2)
+
+    d = self.decoder2(d) # 32 channels 80x80
     e1 = self.e1bn(self.e1conv(e1))
-    depth = F.relu(depth+e1)
+    d = F.relu(d+e1)
     
-    depth = self.decoder3(depth) # 64 channels 40x40
+    d = self.decoder3(d) # 64 channels 40x40
     e0 = self.e0bn(self.e0conv(e0))
-    depth = F.relu(depth+e0)
+    d = F.relu(d+e0)
     
-    depth = F.relu(self.bn1(self.conv1(depth)))
-    depth = F.relu(self.bn2(self.conv2(depth)))
+    d = F.relu(self.bn1(self.conv1(d)))
+    d = F.relu(self.bn2(self.conv2(d)))
     
-    depth = self.conv3(depth)
-    return self.minmaxscaler(depth)
+    d = self.conv3(d)
+    return self.minmaxscaler(d)
 
 
 #implementation of the new resnet model
@@ -252,19 +158,16 @@ class S15NetED2(Net):
     super(S15NetED2,self).__init__(name)
     self.prepLayer = InitialBlock(planes)  # 64 channels
     self.encoder = Encoder(planes*4)  # 512 channels
-    #self.maskdecoder = DepthDecoder(planes*32) #MaskDecoder(planes*16)
-    #self.depthdecoder = DepthDecoder(planes*32)
-    self.decoder = Decoder(planes*32)
+    self.maskdecoder = Decoder(planes*32) 
+    self.depthdecoder = Decoder(planes*32)
    
   def forward(self,x):
     data_shape = x.size()
     e0 = self.prepLayer(x) # 32 channels 160x160
-    e1, e2, e3 = self.encoder(e0) # 32 channels 80x80
+    e1, e2, e3, e4 = self.encoder(e0) # 32 channels 80x80
 
-    #mask = self.maskdecoder(e2, e1, e0)
-    #depth = self.depthdecoder(e3, e2, e1, e0)
-
-    return self.decoder(e3, e2, e1, e0)
+    mask = self.maskdecoder(e4, e3, e2, e1, e0)
+    depth = self.depthdecoder(e4, e3, e2, e1, e0)
     
-    #return torch.cat((mask, depth), 1)
+    return torch.cat((mask, depth), 1)
     
