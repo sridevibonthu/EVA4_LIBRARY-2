@@ -149,6 +149,7 @@ class RunManager():
     self.test_output = None
     self.test_input = None
     self.batchlrs = []
+    self.batchloss = []
 
   def end_epoch(self, lr):
     # calculate epoch duration and run duration(accumulate)
@@ -163,6 +164,8 @@ class RunManager():
     self.tb.add_scalar('Learning Rate', lr, self.epoch_count)
     for b in self.batchlrs:
       self.tb.add_scalar('Batch Learning Rate', b[0], b[1])
+    for b in self.batchloss:
+      self.tb.add_scalar('Batch Losses', b[0], b[1])
 
     # output sample images created in test
     self.sample_outcome_classes(self.test_output, f'output-{self.epoch_count}')
@@ -201,6 +204,7 @@ class RunManager():
   # accumulate loss of batch into entire epoch loss
   def track_train_loss(self, loss):
     # multiply batch size so variety of batch sizes can be compared
+    self.batchlrs.append((loss.item(), self.batch_count+1))
     self.epoch_train_loss += loss.item() * self.trainloader.batch_size
 
   def track_test_loss(self, loss):
